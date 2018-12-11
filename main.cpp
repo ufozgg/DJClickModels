@@ -12,6 +12,7 @@ Auther: THUIR Ruizhe Zhang
 #include"baseline.h"
 #include"data_filter.h"
 #include"load.h"
+#include"dbn.h"
 using namespace std;
 int main(int argc,char* argv[])
 {
