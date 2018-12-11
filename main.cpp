@@ -62,11 +62,24 @@ int main(int argc,char* argv[])
 	cout<<"Ok querys: "<<querys.size()-qFilter[0]-qFilter[1]<<endl;
 	cout<<"All docs num: "<<docs.size()<<endl;
 	vector<string> mods=split(pa.get<std::string>("module"),',');
+	if(find(mods.begin(),mods.end(),"baseline")!=mods.end())
+	{
+		baseline baseline_mod=baseline();
+		baseline_mod.train();
+		baseline_mod.test();
+		if(pa.get<std::string>("sample")=="true")
+			baseline_mod.sample();
+		#ifdef DEBUG
+			baseline_mod.check();
+		#endif
+	}
 	if(find(mods.begin(),mods.end(),"dcm")!=mods.end())
 	{
 		dcm dcm_mod=dcm();
 		dcm_mod.train();
 		dcm_mod.test();
+		if(pa.get<std::string>("sample")=="true")
+			dcm_mod.sample();
 		#ifdef DEBUG
 			dcm_mod.check();
 		#endif
@@ -76,17 +89,10 @@ int main(int argc,char* argv[])
 		ubm ubm_mod=ubm();
 		ubm_mod.train();
 		ubm_mod.test();
+		if(pa.get<std::string>("sample")=="true")
+			ubm_mod.sample();
 		#ifdef DEBUG
 			ubm_mod.check();
-		#endif
-	}
-	if(find(mods.begin(),mods.end(),"baseline")!=mods.end())
-	{
-		baseline baseline_mod=baseline();
-		baseline_mod.train();
-		baseline_mod.test();
-		#ifdef DEBUG
-			baseline_mod.check();
 		#endif
 	}
 	return 0;
