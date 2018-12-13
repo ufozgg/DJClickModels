@@ -84,8 +84,8 @@ class dbn:public model
             static double forward[DOCPERPAGE+2][2],backward[DOCPERPAGE+2][2];
             memset(forward,0,sizeof(forward));//alpha
             memset(backward,0,sizeof(backward));//beta
-            forward[1][1]=1;
-            forward[1][0]=0;
+            forward[1][1]=1.;
+            forward[1][0]=0.;
             backward[DOCPERPAGE+1][1]=1;
             backward[DOCPERPAGE+1][0]=1;
             for(int i=1;i<DOCPERPAGE;++i)
@@ -93,15 +93,20 @@ class dbn:public model
                 if(sess.click_time[i]>.1)
                 {
                     forward[i+1][0]=forward[i][1]*a[sess.doc_id[i]]*(1.-gamma+gamma*s[sess.doc_id[i]]);
-                    forward[i+1][1]=forward[i][1]*a[sess.doc_id[i]]*(1-s[sess.doc_id[i]])*gamma;
+                    forward[i+1][1]=forward[i][1]*a[sess.doc_id[i]]*(1.-s[sess.doc_id[i]])*gamma;
                 }
                 else
                 {
                     forward[i+1][0]=forward[i][0]+forward[i][1]*(1.-a[sess.doc_id[i]])*(1.-gamma);
                     forward[i+1][1]=forward[i][1]*(1.-a[sess.doc_id[i]])*gamma;
                 }
+                
+                assert(forward[i][0]>=0.);
+                assert(forward[i][0]<=1.);
+                assert(forward[i][1]>=0.);
+                assert(forward[i][1]<=1.);
             }
-            for(int i=DOCPERPAGE;i>1;--i)
+            for(int i=DOCPERPAGE+1;i>1;--i)
             {
                 if(sess.click_time[i-1]>.1)
                 {
@@ -115,9 +120,22 @@ class dbn:public model
                         backward[i][0]*(1.-a[sess.doc_id[i-1]])*(1.-gamma);
                     backward[i-1][0]=backward[i][0];
                 }
+                assert(backward[i][0]>=0.);
+                assert(backward[i][0]<=1.);
+                assert(backward[i][1]>=0.);
+                assert(backward[i][1]<=1.);
             }
+            /*cout<<sess.id<<endl<<sess.doc_id[1]<<endl;
             for(int i=1;i<=DOCPERPAGE;++i)
+            {
+                cout<<i<<"\t"<<forward[i][0]<<"\t"<<forward[i][1]<<"\t"<<backward[i][0]<<"\t"<<backward[i][1]<<"\t"<<a[sess.doc_id[i]]<<"\t"<<s[sess.doc_id[i]]<<endl;
+            }*/
+            for(int i=1;i<=DOCPERPAGE;++i)
+            {
                 pr[i]=forward[i][1]*backward[i][1]/(forward[i][0]*backward[i][0]+forward[i][1]*backward[i][1]);
+                assert(pr[i]<=1.);
+                assert(pr[i]>=0.);
+            }
         }
         void get_click_prob(Session &sess,double* click_prob)
         {

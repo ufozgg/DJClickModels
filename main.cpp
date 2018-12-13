@@ -40,6 +40,14 @@ int main(int argc,char* argv[])
 		IFFILTER=true;
 	else
 		IFFILTER=false;
+	Doc x=Doc();
+	docs.push_back(x);
+	Session y=Session();
+	y.enable=false;
+	sessions.push_back(y);
+	Query z=Query();
+	z.enable=false;
+	querys.push_back(z);
 	if(pa.get<std::string>("load")=="zjq") 
 		load_data_zjq_181113(data_dir);
 	if(pa.get<std::string>("load")=="clcd"||pa.get<std::string>("load")=="clc")
