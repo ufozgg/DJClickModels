@@ -20,7 +20,7 @@ int main(int argc,char* argv[])
 	assert(MINSESSION<=MAXSESSION);
 	pa.add<std::string>("module",'m',"module name such as \"ubm\"",false,"");
 	pa.add<std::string>("save",'s',"format: \"clc\" or \"zrz\"",false,"",cmdline::oneof<std::string>("clc","zrz"));
-	pa.add<std::string>("load",'l',"format: \"clc\" or \"zrz\"or \"zjq\"",false,"",cmdline::oneof<std::string>("clc","zrz","zjq"));
+	pa.add<std::string>("load",'l',"format: \"clc\" or \"zrz\"or \"zjq\"",false,"",cmdline::oneof<std::string>("clc","zrz","zjq","clcd"));
 	pa.add<std::string>("indir",'i',"format: a dir",false,"");
 	pa.add<std::string>("outdir",'o',"format: a dir",false,"");
 	pa.add<std::string>("filter",'f',"filter or not",false,"true");
@@ -42,7 +42,9 @@ int main(int argc,char* argv[])
 		IFFILTER=false;
 	if(pa.get<std::string>("load")=="zjq") 
 		load_data_zjq_181113(data_dir);
-	else
+	if(pa.get<std::string>("load")=="clcd"||pa.get<std::string>("load")=="clc")
+		read_clc(pa.get<std::string>("load")=="clcd");
+	if(pa.get<std::string>("load")=="default")
 		read_Data_20170903();
 	//return 0;
 	if(pa.get<std::string>("filter")=="true")
@@ -94,6 +96,17 @@ int main(int argc,char* argv[])
 			ubm_mod.sample();
 		#ifdef DEBUG
 			ubm_mod.check();
+		#endif
+	}
+	if(find(mods.begin(),mods.end(),"dbn")!=mods.end())
+	{
+		dbn dbn_mod=dbn();
+		dbn_mod.train();
+		dbn_mod.test();
+		if(pa.get<std::string>("sample")=="true")
+			dbn_mod.sample();
+		#ifdef DEBUG
+			dbn_mod.check();
 		#endif
 	}
 	return 0;
