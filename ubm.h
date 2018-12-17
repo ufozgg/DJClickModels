@@ -35,7 +35,7 @@ class ubm:public model
             double nexgamma[DOCPERPAGE+2][DOCPERPAGE+2];
             int gamma_cnt[DOCPERPAGE+2][DOCPERPAGE+2];
             int rnd;
-            for(rnd=1;rnd<=500;++rnd)
+            for(rnd=1;rnd<=10000;++rnd)
             {
                 for(int i=0;i<docs.size();++i)
                     doc_rel2[i]=0.5;//FOR SMOOTH
@@ -91,11 +91,13 @@ class ubm:public model
                         gamma[i][j]=nexgamma[i][j]/gamma_cnt[i][j];
                 double now_LL,now_LL2,now_LL1;
                 now_LL=this->test(false,3);
-                now_LL2=this->test(false,2);
-                now_LL1=this->test(false,1);
+                //now_LL2=this->test(false,2);
+                //now_LL1=this->test(false,1);
                 if(now_LL-last_LL<1e-16)
                     break;
-                cout<<now_LL1<<","<<now_LL2<<","<<now_LL<<endl;
+                if(rnd%100==0)
+                    cout<<"UBM LL:=\t"<<rnd<<"\t"<<fixed<<setprecision(12)<<now_LL<<endl;
+                //cout<<now_LL1<<","<<now_LL2<<","<<now_LL<<endl;
                 last_LL=now_LL;
             }
             cout<<"ROUND:=\t"<<rnd<<endl;

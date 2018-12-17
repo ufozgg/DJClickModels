@@ -7,10 +7,11 @@ class dbn:public model
         vector<double> a,s;
         vector<double> Qa,Qs;
         vector<int> clk_tim;
-        double gamma=.9;
+        double gamma=.925;
         void train()
         {
             name="Dbn:";
+            doc_rel=vector<double>(docs.size()+1);
             a=vector<double>(docs.size()+1);
             s=vector<double>(docs.size()+1);
             Qa=vector<double>(docs.size()+1);
@@ -18,7 +19,7 @@ class dbn:public model
             clk_tim=vector<int>(docs.size()+1);
             int sess_cnt=0;
             for(int i=0;i<docs.size();++i)
-                docs[i].train_tim=2,clk_tim[i]=2;
+                docs[i].train_tim=0,clk_tim[i]=0;
             for(auto &sess:sessions)
             {
                 if(sess.enable==false)
@@ -41,10 +42,10 @@ class dbn:public model
             double pr0[DOCPERPAGE+2];
             double last_LL=-100,now_LL;
             int p0=1;
-            for(rnd=1;rnd<=1024;++rnd)
+            for(rnd=1;rnd<=100;++rnd)
             {
                 for(int i=1;i<docs.size();++i)
-                    Qa[i]=Qs[i]=1;
+                    Qa[i]=Qs[i]=0;
                 for(auto &sess:sessions)
                 {
                     if(sess.enable==false)
@@ -69,22 +70,26 @@ class dbn:public model
 
                 for(int i=1;i<docs.size();++i)
                 {
-                    if(docs[i].train_tim)
-                        a[i]=Qa[i]/docs[i].train_tim;
-                    if(clk_tim[i])
-                        s[i]=Qs[i]/clk_tim[i];
+                    a[i]=(Qa[i]+.5)/(docs[i].train_tim+1);
+                    s[i]=(Qs[i]+.5)/(clk_tim[i]+1);
                     //(tim-x)/(a-1)+x/a=0
                     //a*tim=x
                     //a=x/tim
                 }
-                now_LL=this->test(false,3);
+                //if(rnd%100==0)
+                    cout<<rnd<<"\t"<<fixed<<setprecision(12)<<this->test(false,2)<<endl;
                 //cout<<rnd<<"\tVal LL:=\t"<<now_LL<<endl;
-                if(now_LL-1e-16<last_LL)
-                    break;
+                /*if(now_LL-1e-16<last_LL)
+                    break;*/
                 //cout<<rnd<<"\tTrain LL:=\t"<<this->test(false,1)<<"\tVal LL:=\t"<<now_LL<<"\tTest LL:=\t"<<this->test(false,2)<<endl;
-                cout<<rnd<<"\t"<<this->test(false,1)<<"\t"<<now_LL<<"\t"<<this->test(false,2)<<endl;
-                last_LL=now_LL;
+                //cout<<rnd<<"\t"<<this->test(false,1)<<"\t"<<now_LL<<"\t"<<this->test(false,2)<<endl;
+                //last_LL=now_LL;
             }
+            for(int i=0;i<docs.size();++i)
+                if(docs[i].train_tim)
+                {
+                    doc_rel[i]=a[i]*s[i];
+                }
         }
         void get_examine_prob(Session &sess,double *pr)
         {
@@ -155,8 +160,11 @@ class dbn:public model
                 else
                 {
                     click_prob[i]=1.-examination*a[sess.doc_id[i]];
-                    examination*=(1.-a[sess.doc_id[i]])/(1.-examination*a[sess.doc_id[i]])*gamma;
+                    examination*=(1.-a[sess.doc_id[i]])/click_prob[i]*gamma;
                 }
+                /*click_prob[i]=(sess.click_time[i]<.1)+(1-2*(sess.click_time[i]<.1))*examination*a[sess.doc_id[i]];
+                examination=gamma*(1.-(sess.click_time[i]>.1)*s[sess.doc_id[i]])*\
+                    (1.-(sess.click_time[i]<.1)*a[sess.doc_id[i]])/(1.-(sess.click_time[i]<.1)*examination*a[sess.doc_id[i]])*((sess.click_time[i]>.1)*1.+(sess.click_time[i]<.1)*examination);*/
             }
         }
 };

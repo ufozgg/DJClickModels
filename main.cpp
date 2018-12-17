@@ -78,6 +78,7 @@ int main(int argc,char* argv[])
 		baseline baseline_mod=baseline();
 		baseline_mod.train();
 		baseline_mod.test();
+		baseline_mod.dump_rel();
 		if(pa.get<std::string>("sample")=="true")
 			baseline_mod.sample();
 		#ifdef DEBUG
@@ -89,6 +90,7 @@ int main(int argc,char* argv[])
 		dcm dcm_mod=dcm();
 		dcm_mod.train();
 		dcm_mod.test();
+		dcm_mod.dump_rel();
 		if(pa.get<std::string>("sample")=="true")
 			dcm_mod.sample();
 		#ifdef DEBUG
@@ -100,6 +102,7 @@ int main(int argc,char* argv[])
 		ubm ubm_mod=ubm();
 		ubm_mod.train();
 		ubm_mod.test();
+		ubm_mod.dump_rel();
 		if(pa.get<std::string>("sample")=="true")
 			ubm_mod.sample();
 		#ifdef DEBUG
@@ -111,6 +114,7 @@ int main(int argc,char* argv[])
 		dbn dbn_mod=dbn();
 		dbn_mod.train();
 		dbn_mod.test();
+		dbn_mod.dump_rel();
 		if(pa.get<std::string>("sample")=="true")
 			dbn_mod.sample();
 		#ifdef DEBUG

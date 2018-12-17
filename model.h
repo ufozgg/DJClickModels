@@ -116,8 +116,10 @@ class model
             fprintf(file,"\n");
             fclose(file);
         }
-        void dump_rel(string file_name)
+        void dump_rel()
         {
+            string file_name="../output/_";
+            file_name+=name+".relevence";
             FILE* file=fopen(file_name.data(),"w");
             for(int i=0;i<docs.size();++i)
                 if(docs[i].train_tim)
@@ -198,10 +200,10 @@ class model
                 {
                     logp=log(click_prob[i]);
                     log_likelihood+=logp;
-                    if(logp>log(0.99999999))
-                        logp=log(0.99999999);
-                    if(logp<log(0.00000001))
-                        logp=log(0.00000001);// MAGIC OPTION
+                    if(logp>log(0.99999999999))
+                        logp=log(0.99999999999);
+                    if(logp<log(0.00000000001))
+                        logp=log(0.00000000001);// MAGIC OPTION
                     //log(P(C_1,C_2...C_i)/P(C_1,C_2...C_i-1))
                     //position_perplexity[i]-=log(click_prob[i]/click_prob[i-1]);
                     position_perplexity[i]-=logp;
@@ -221,6 +223,7 @@ class model
                     cout<<position_perplexity[i]<<"\t";
                 cout<<endl<<"Perplexity:\t"<<total_perplexity<<endl<<endl<<endl;
             }
+            //return total_perplexity;
             return log_likelihood/test_cnt/DOCPERPAGE;
 		}
 };
