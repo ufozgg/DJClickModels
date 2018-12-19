@@ -1,6 +1,6 @@
 #ifndef BASELINE_H
 #define BASELINE_H
-//#define double long double
+#define double long double
 class baseline:public model
 {
     public:

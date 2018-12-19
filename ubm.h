@@ -1,6 +1,6 @@
 #ifndef UBM_H
 #define UBM_H
-//#define double long double
+#define double long double
 class ubm:public model
 {
     public:
@@ -20,7 +20,7 @@ class ubm:public model
                 for(int j=1;j<=i;++j)
                     gamma[i][j]=0.5;
             int sess_cnt=0;
-            double last_LL=-1,sum;
+            double last_LL=10,sum;
             for(auto &sess:sessions)
             {
                 if(sess.enable==false)
@@ -93,10 +93,10 @@ class ubm:public model
                 now_LL=this->test(false,3);
                 //now_LL2=this->test(false,2);
                 //now_LL1=this->test(false,1);
-                if(now_LL-last_LL<1e-16)
+                if(now_LL-last_LL>1e-16)
                     break;
-                if(rnd%100==0)
-                    cout<<"UBM LL:=\t"<<rnd<<"\t"<<fixed<<setprecision(12)<<now_LL<<endl;
+                //if(rnd%100==0)
+                //    cout<<"UBM LL:=\t"<<rnd<<"\t"<<fixed<<setprecision(12)<<now_LL<<endl;
                 //cout<<now_LL1<<","<<now_LL2<<","<<now_LL<<endl;
                 last_LL=now_LL;
             }

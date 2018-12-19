@@ -1,6 +1,6 @@
 #ifndef MODEL_H
 #define MODEL_H
-//#define double long double
+#define double long double
 //#include<alghorithms>
 bool istest(Session &sess,int cnt)
 {
@@ -153,7 +153,7 @@ class model
             }
             cerr<<"CHECK MODEL FINISHED"<<endl;
         }
-		double test(bool out=true,int kind=2)
+		double test(bool out=true,int kind=2,int type=-1)
 		{
             if(out)
                 cout<<"Test Module "<<name<<endl;
@@ -177,12 +177,12 @@ class model
             }
             double click_prob[DOCPERPAGE+2];
                 double minn=1;
-			for(auto sess:sessions)
+			for(auto &sess:sessions)
             {
                 if(sess.enable==false)
                     continue;
                 ++sess_cnt;
-                if(sess.kind!=kind)
+                if(sess.kind!=kind||(type!=-1&&type!=sess.type))
                     continue;
                 /*bool ok=true;
                 for(int i=1;i<=10;++i)
@@ -209,6 +209,7 @@ class model
                     position_perplexity[i]-=logp;
                 }
             }
+            //exit(0);
             for(i=1;i<=DOCPERPAGE;++i)
                 position_perplexity[i]=pow(2.,position_perplexity[i]/log(2)/test_cnt);
             for(i=1;i<=DOCPERPAGE;++i)
@@ -223,8 +224,8 @@ class model
                     cout<<position_perplexity[i]<<"\t";
                 cout<<endl<<"Perplexity:\t"<<total_perplexity<<endl<<endl<<endl;
             }
-            //return total_perplexity;
-            return log_likelihood/test_cnt/DOCPERPAGE;
+            return total_perplexity;
+            //return log_likelihood/test_cnt/DOCPERPAGE;
 		}
 };
 #endif

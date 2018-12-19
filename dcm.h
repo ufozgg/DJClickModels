@@ -1,6 +1,6 @@
 #ifndef DCM_H
 #define DCM_H
-//#define double long double
+#define double long double
 class dcm:public model
 {
     public:
@@ -56,7 +56,7 @@ class dcm:public model
             }
             for(int i=1;i<=DOCPERPAGE;++i)
             {
-                cout<<pos_clk[i]<<"\t"<<pos_last_clk[i]<<endl;
+                //cout<<pos_clk[i]<<"\t"<<pos_last_clk[i]<<endl;
                 if(pos_clk[i])
                     gamma[i]=((double)pos_clk[i]-pos_last_clk[i])/pos_clk[i];
                 else

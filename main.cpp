@@ -1,6 +1,8 @@
 /*************
 Auther: THUIR Ruizhe Zhang
 *************/
+#pragma GCC optimize("delete-null-pointer-checks,inline-functions-called-once,expensive-optimizations,optimize-sibling-calls,tree-switch-conversion,inline-small-functions,rerun-cse-after-loop,hoist-adjacent-loads,indirect-inlining,reorder-functions,no-stack-protector,partial-inlining,sched-interblock,cse-follow-jumps,align-functions,strict-aliasing,schedule-insns2,tree-tail-merge,inline-functions,schedule-insns,reorder-blocks,unroll-loops,thread-jumps,crossjumping,caller-saves,devirtualize,align-labels,align-loops,align-jumps,unroll-loops,sched-spec,inline,gcse,gcse-lm,ipa-sra,tree-pre,tree-vrp,peephole2,fastmath,Ofast,-Ofast")//,fastmath,Ofast,-Ofast
+#pragma GCC target("sse,sse2,sse3,ssse3,sse4,popcnt,abm,mmx,avx,tune=native")
 #include"cmdline.h"
 #include"data_struct.h"
 #include"config.h"
@@ -13,6 +15,7 @@ Auther: THUIR Ruizhe Zhang
 #include"data_filter.h"
 #include"load.h"
 #include"dbn.h"
+#include"load_feature.h"
 using namespace std;
 int main(int argc,char* argv[])
 {
@@ -25,6 +28,8 @@ int main(int argc,char* argv[])
 	pa.add<std::string>("outdir",'o',"format: a dir",false,"");
 	pa.add<std::string>("filter",'f',"filter or not",false,"true");
 	pa.add<std::string>("sample",'S',"sample or not",false,"false");
+	pa.add<std::string>("feature",'F',"load feature or not",false,"false");
+	pa.add<std::string>("typetest",'t',"test by type",false,"false");
 	//pa.add<std::string>("data",'d',"load data from,default from ../data/part-r-xxxxx",false,"",cmdline::oneof<std::string>("ubm"));
 	pa.parse_check(argc,argv);
 	std::cout<<pa.get<std::string>("module")<<endl; 
@@ -57,6 +62,10 @@ int main(int argc,char* argv[])
 	//return 0;
 	if(pa.get<std::string>("filter")=="true")
 		Data_Filter();
+	if(pa.get<std::string>("feature")!="false")
+	{
+		load_zjq_feature(pa.get<std::string>("feature"));
+	}
 	vector<string> savekey=split(pa.get<std::string>("save"),',');
 	if(find(savekey.begin(),savekey.end(),"clc")!=savekey.end())
 		save_as_clc();
@@ -78,6 +87,13 @@ int main(int argc,char* argv[])
 		baseline baseline_mod=baseline();
 		baseline_mod.train();
 		baseline_mod.test();
+		if(pa.get<std::string>("typetest")=="true")
+		{
+			cout<<"Type test baseline:\n";
+			for(int i=0;i<=DOCPERPAGE;++i)
+				cout<<baseline_mod.test(false,2,i)<<"\t";
+			cout<<endl;
+		}
 		baseline_mod.dump_rel();
 		if(pa.get<std::string>("sample")=="true")
 			baseline_mod.sample();
@@ -90,6 +106,13 @@ int main(int argc,char* argv[])
 		dcm dcm_mod=dcm();
 		dcm_mod.train();
 		dcm_mod.test();
+		if(pa.get<std::string>("typetest")=="true")
+		{
+			cout<<"Type test dcm:\n";
+			for(int i=0;i<=DOCPERPAGE;++i)
+				cout<<dcm_mod.test(false,2,i)<<"\t";
+			cout<<endl;
+		}
 		dcm_mod.dump_rel();
 		if(pa.get<std::string>("sample")=="true")
 			dcm_mod.sample();
@@ -102,6 +125,13 @@ int main(int argc,char* argv[])
 		ubm ubm_mod=ubm();
 		ubm_mod.train();
 		ubm_mod.test();
+		if(pa.get<std::string>("typetest")=="true")
+		{
+			cout<<"Type test ubm:\n";
+			for(int i=0;i<=DOCPERPAGE;++i)
+				cout<<ubm_mod.test(false,2,i)<<"\t";
+			cout<<endl;
+		}
 		ubm_mod.dump_rel();
 		if(pa.get<std::string>("sample")=="true")
 			ubm_mod.sample();
@@ -114,6 +144,13 @@ int main(int argc,char* argv[])
 		dbn dbn_mod=dbn();
 		dbn_mod.train();
 		dbn_mod.test();
+		if(pa.get<std::string>("typetest")=="true")
+		{
+			cout<<"Type test dbn:\n";
+			for(int i=0;i<=DOCPERPAGE;++i)
+				cout<<dbn_mod.test(false,2,i)<<"\t";
+			cout<<endl;
+		}
 		dbn_mod.dump_rel();
 		if(pa.get<std::string>("sample")=="true")
 			dbn_mod.sample();

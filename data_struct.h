@@ -12,21 +12,24 @@ class Doc
         string name;
         int last_sess,last_pos;
 		int train_tim,test_tim;
+		int type;
         Doc()
         {
             name="";
 			train_tim=test_tim=0;
             last_sess=last_pos=-1;
+			type=0;
         }
 };
 class Session
 {
     public:
-        int id,click_cnt,enable,kind;
+        int id,click_cnt,enable,kind;//kind=1(train) kind=2(test) kind=3(vali)
         string ip;
         double begin_time,click_time[MINDOCPERPAGE+2];
         int doc_id[MINDOCPERPAGE+2],nex_sess[MINDOCPERPAGE+2],nex_pos[MINDOCPERPAGE+2];
         int user_id,user_nex,query_id,query_nex;
+		int type;
     Session()
     {
         click_cnt=0;
@@ -34,6 +37,7 @@ class Session
 		enable=1;
         memset(click_time,0,sizeof(click_time));
         memset(doc_id,0,sizeof(doc_id));
+		type=0;
     }
 };
 class Query
@@ -42,11 +46,13 @@ class Query
         string name;
         int last,enable;
         int sess_cnt;
+		int type;
         Query()
         {
             name="";
             sess_cnt=0;
             last=-1;
+			type=0;
         }
 };
 class User
@@ -102,7 +108,7 @@ void qryadd(string qry_w,Session &now)
 }
 void addDoc(string doc_name,Session &now,int pos,int ifclick,double clicktime)
 {
-	doc_name=to_string(now.query_id)+"#"+doc_name;
+	doc_name=querys[now.query_id].name+"#"+doc_name;
 	int w=doc_name2id[doc_name];
 	if(w==0)
 	{
