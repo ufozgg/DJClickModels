@@ -7,7 +7,7 @@ class dbn:public model
         vector<double> a,s;
         vector<double> Qa,Qs;
         vector<int> clk_tim;
-        double gamma=.925;
+        double gamma=.9;//.925;
         void train()
         {
             name="Dbn:";
@@ -42,7 +42,7 @@ class dbn:public model
             double pr0[DOCPERPAGE+2];
             double last_LL=-100,now_LL,kk=10,kk2;
             int p0=1;
-            for(rnd=1;rnd<=10000;++rnd)
+            for(rnd=1;rnd<=MAXROUND;++rnd)
             {
                 for(int i=1;i<docs.size();++i)
                     Qa[i]=Qs[i]=0;
@@ -86,18 +86,22 @@ class dbn:public model
                     //a*tim=x
                     //a=x/tim
                 }
-                if(rnd%100==1)
+                /*if(rnd%100==1)
                 {
                     kk2=test(rnd%1000==1,2);
                     cout<<rnd<<"\t"<<fixed<<setprecision(12)<<kk-kk2<<"\t"<<kk2<<endl;
                     kk=kk2;
-                }
+                }*/
                 //cout<<rnd<<"\tVal LL:=\t"<<now_LL<<endl;
-                /*if(now_LL-1e-16<last_LL)
-                    break;*/
+                if(rnd%100==0)
+                {
+                    now_LL=test(false,3);
+                    cerr<<rnd<<"\t"<<this->test(false,3)<<endl;
+                }
+                if(now_LL-1e-8<last_LL)
+                    break;
                 //cout<<rnd<<"\tTrain LL:=\t"<<this->test(false,1)<<"\tVal LL:=\t"<<now_LL<<"\tTest LL:=\t"<<this->test(false,2)<<endl;
-                //cout<<rnd<<"\t"<<this->test(false,1)<<"\t"<<now_LL<<"\t"<<this->test(false,2)<<endl;
-                //last_LL=now_LL;
+                last_LL=now_LL;
             }
             for(int i=0;i<docs.size();++i)
                 if(docs[i].train_tim)

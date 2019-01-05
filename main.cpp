@@ -15,6 +15,7 @@ Auther: THUIR Ruizhe Zhang
 #include"data_filter.h"
 #include"load.h"
 #include"dbn.h"
+#include"mcm.h"
 #include"load_feature.h"
 using namespace std;
 int main(int argc,char* argv[])
@@ -32,11 +33,11 @@ int main(int argc,char* argv[])
 	pa.add<std::string>("typetest",'t',"test by type",false,"false");
 	//pa.add<std::string>("data",'d',"load data from,default from ../data/part-r-xxxxx",false,"",cmdline::oneof<std::string>("ubm"));
 	pa.parse_check(argc,argv);
-	std::cout<<pa.get<std::string>("module")<<endl; 
-	std::cout<<pa.get<std::string>("save")<<endl;
-	std::cout<<pa.get<std::string>("load")<<endl;
-	std::cout<<pa.get<std::string>("indir")<<endl;
-	std::cout<<pa.get<std::string>("outdir")<<endl;
+	std::cerr<<pa.get<std::string>("module")<<endl; 
+	std::cerr<<pa.get<std::string>("save")<<endl;
+	std::cerr<<pa.get<std::string>("load")<<endl;
+	std::cerr<<pa.get<std::string>("indir")<<endl;
+	std::cerr<<pa.get<std::string>("outdir")<<endl;
 	if(pa.get<std::string>("indir")!="")
 		data_dir=pa.get<std::string>("indir");
 	if(pa.get<std::string>("outdir")!="")
@@ -69,18 +70,18 @@ int main(int argc,char* argv[])
 	vector<string> savekey=split(pa.get<std::string>("save"),',');
 	if(find(savekey.begin(),savekey.end(),"clc")!=savekey.end())
 		save_as_clc();
-	cout<<"Format error: "<<Filter[0]<<endl;
-	cout<<"Head Format error: "<<Filter[1]<<endl;
-	cout<<"Not first page: "<<Filter[2]<<endl;
-	cout<<"More than "<<MAXDOCPERPAGE<<" docs' sessions: "<<Filter[3]<<endl;
-	cout<<"Less than "<<MINDOCPERPAGE<<" docs' sessions: "<<Filter[4]<<endl;
-	cout<<"Sessions in query with too few sessions: "<<Filter[6]<<endl;
-	cout<<"Sessions in query with too much sessions: "<<Filter[5]<<endl;
-	cout<<"Querys with too FEW sessions: "<<qFilter[1]<<endl;
-	cout<<"Querys with too MORE sessions: "<<qFilter[0]<<endl;
-	cout<<"Ok Sessions: "<<sessions.size()-Filter[5]-Filter[6]<<endl;
-	cout<<"Ok querys: "<<querys.size()-qFilter[0]-qFilter[1]<<endl;
-	cout<<"All docs num: "<<docs.size()<<endl;
+	cerr<<"Format error: "<<Filter[0]<<endl;
+	cerr<<"Head Format error: "<<Filter[1]<<endl;
+	cerr<<"Not first page: "<<Filter[2]<<endl;
+	cerr<<"More than "<<MAXDOCPERPAGE<<" docs' sessions: "<<Filter[3]<<endl;
+	cerr<<"Less than "<<MINDOCPERPAGE<<" docs' sessions: "<<Filter[4]<<endl;
+	cerr<<"Sessions in query with too few sessions: "<<Filter[6]<<endl;
+	cerr<<"Sessions in query with too much sessions: "<<Filter[5]<<endl;
+	cerr<<"Querys with too FEW sessions: "<<qFilter[1]<<endl;
+	cerr<<"Querys with too MORE sessions: "<<qFilter[0]<<endl;
+	cerr<<"Ok Sessions: "<<sessions.size()-Filter[5]-Filter[6]<<endl;
+	cerr<<"Ok querys: "<<querys.size()-qFilter[0]-qFilter[1]<<endl;
+	cerr<<"All docs num: "<<docs.size()<<endl;
 	vector<string> mods=split(pa.get<std::string>("module"),',');
 	if(find(mods.begin(),mods.end(),"baseline")!=mods.end())
 	{
@@ -156,6 +157,25 @@ int main(int argc,char* argv[])
 			dbn_mod.sample();
 		#ifdef DEBUG
 			dbn_mod.check();
+		#endif
+	}
+	if(find(mods.begin(),mods.end(),"mcm")!=mods.end())
+	{
+		mcm mcm_mod=mcm();
+		mcm_mod.train();
+		mcm_mod.test();
+		if(pa.get<std::string>("typetest")=="true")
+		{
+			cout<<"Type test dbn:\n";
+			for(int i=0;i<=DOCPERPAGE;++i)
+				cout<<mcm_mod.test(false,2,i)<<"\t";
+			cout<<endl;
+		}
+		mcm_mod.dump_rel();
+		if(pa.get<std::string>("sample")=="true")
+			mcm_mod.sample();
+		#ifdef DEBUG
+			mcm_mod.check();
 		#endif
 	}
 	return 0;

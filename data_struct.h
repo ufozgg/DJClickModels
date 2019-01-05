@@ -68,6 +68,7 @@ vector<User> users;
 unordered_map<string,int> user_name2id;
 unordered_map<string,int> qry_name2id;
 unordered_map<string,int> doc_name2id;
+unordered_map<string,int> feature_name2id;
 void uidadd(string uid,Session &now);
 void qryadd(string qry_w,Session &now);
 void addDoc(string doc_name,Session &now,int pos,int ifclick,double clicktime);

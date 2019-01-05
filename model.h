@@ -207,11 +207,27 @@ class model
                     //log(P(C_1,C_2...C_i)/P(C_1,C_2...C_i-1))
                     //position_perplexity[i]-=log(click_prob[i]/click_prob[i-1]);
                     position_perplexity[i]-=logp;
+                    if(sess.click_time[i]>.1)
+                    {
+                        position_click[i]+=1;
+                        position_click_perplexity[i]-=logp;
+                    }
+                    else
+                    {
+                        position_skip[i]+=1;
+                        position_skip_perplexity[i]-=logp;
+                    }
                 }
             }
             //exit(0);
             for(i=1;i<=DOCPERPAGE;++i)
+            {
                 position_perplexity[i]=pow(2.,position_perplexity[i]/log(2)/test_cnt);
+                if(position_click[i])
+                    position_click_perplexity[i]=pow(2.,position_click_perplexity[i]/log(2)/position_click[i]);
+                if(position_skip[i])
+                    position_skip_perplexity[i]=pow(2.,position_skip_perplexity[i]/log(2)/position_skip[i]);
+            }
             for(i=1;i<=DOCPERPAGE;++i)
                 total_perplexity+=position_perplexity[i];
             total_perplexity/=DOCPERPAGE;
@@ -222,10 +238,19 @@ class model
                 cout<<"Position Perplexity(Base 2):\n";
                 for(i=1;i<=DOCPERPAGE;++i)
                     cout<<position_perplexity[i]<<"\t";
-                cout<<endl<<"Perplexity:\t"<<total_perplexity<<endl<<endl<<endl;
+                cout<<endl;
+                cout<<"Position Click Perplexity(Base 2):\n";
+                for(i=1;i<=DOCPERPAGE;++i)
+                    cout<<position_click_perplexity[i]<<"\t";
+                cout<<endl;
+                cout<<"Position Skip Perplexity(Base 2):\n";
+                for(i=1;i<=DOCPERPAGE;++i)
+                    cout<<position_skip_perplexity[i]<<"\t";
+                cout<<endl;
+                cout<<"Perplexity:\t"<<total_perplexity<<endl<<endl<<endl;
             }
-            return total_perplexity;
-            //return log_likelihood/test_cnt/DOCPERPAGE;
+            //return total_perplexity;
+            return log_likelihood/test_cnt/DOCPERPAGE;
 		}
 };
 #endif

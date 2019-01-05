@@ -18,6 +18,8 @@ int line_zjq_feature(const string &line)
         {
             ++ret;
             docs[w].type=atoi(doc_features[i].data());
+            if(docs[w].type>=MAXVERTICLE)
+                MAXVERTICLE=docs[w].type+1;
         }
     }
     return ret;
@@ -44,19 +46,28 @@ bool load_zjq_feature(string file_name)
 	}
     cout<<"Read "<<cnt<<" Features\n";
 	infile.close();
-    int verticle_num[DOCPERPAGE+2]={0};
+    int verticle_num[4][DOCPERPAGE+2]={0};
     for(auto &sess:sessions)
     {
         sess.type=0;
         for(int i=1;i<=DOCPERPAGE;++i)
             if(docs[sess.doc_id[i]].type)
                 ++sess.type;
-        ++verticle_num[sess.type];
+        if(sess.click_cnt==0)
+            ++verticle_num[sess.kind][sess.type];
     }
     cout<<"Verticle number cnt"<<endl;
-    for(int i=0;i<=DOCPERPAGE;++i)
-        cout<<verticle_num[i]<<"\t";
-    cout<<endl;
+    string kind_name[4]={"None","Train","Test","Val"};
+    for(int k=0;k<=3;++k)
+    {
+        cout<<kind_name[k]<<" :\t";
+        for(int i=0;i<=DOCPERPAGE;++i)
+            cout<<verticle_num[k][i]<<"\t";
+        cout<<endl;
+    }
+    for(int i=0;i<docs.size();++i)
+        if(docs[i].type==-1)
+            docs[i].type=MAXVERTICLE;
 	return true;
 }
 #endif

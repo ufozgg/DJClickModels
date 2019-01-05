@@ -20,7 +20,7 @@ class ubm:public model
                 for(int j=1;j<=i;++j)
                     gamma[i][j]=0.5;
             int sess_cnt=0;
-            double last_LL=10,sum;
+            double last_LL=-10,sum;
             for(auto &sess:sessions)
             {
                 if(sess.enable==false)
@@ -35,7 +35,7 @@ class ubm:public model
             double nexgamma[DOCPERPAGE+2][DOCPERPAGE+2];
             int gamma_cnt[DOCPERPAGE+2][DOCPERPAGE+2];
             int rnd;
-            for(rnd=1;rnd<=10000;++rnd)
+            for(rnd=1;rnd<=MAXROUND;++rnd)
             {
                 for(int i=0;i<docs.size();++i)
                     doc_rel2[i]=0.5;//FOR SMOOTH
@@ -93,7 +93,7 @@ class ubm:public model
                 now_LL=this->test(false,3);
                 //now_LL2=this->test(false,2);
                 //now_LL1=this->test(false,1);
-                if(now_LL-last_LL>1e-16)
+                if(now_LL-1e-8<last_LL)
                     break;
                 //if(rnd%100==0)
                 //    cout<<"UBM LL:=\t"<<rnd<<"\t"<<fixed<<setprecision(12)<<now_LL<<endl;
