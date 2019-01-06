@@ -6,7 +6,7 @@
 //Filter when load
 #define MAXDOCPERPAGE 13
 //Filter when load
-#define MAXROUND 2000
+#define MAXROUND 10000
 #define DOCPERPAGE MINDOCPERPAGE
 #define MINCLICK 0
 //Filter when load(by enable flag)

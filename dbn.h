@@ -97,9 +97,9 @@ class dbn:public model
                 {
                     now_LL=test(false,3);
                     cerr<<rnd<<"\t"<<this->test(false,3)<<endl;
+                    if(now_LL-1e-8<last_LL)
+                        break;
                 }
-                if(now_LL-1e-8<last_LL)
-                    break;
                 //cout<<rnd<<"\tTrain LL:=\t"<<this->test(false,1)<<"\tVal LL:=\t"<<now_LL<<"\tTest LL:=\t"<<this->test(false,2)<<endl;
                 last_LL=now_LL;
             }

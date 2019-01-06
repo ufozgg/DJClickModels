@@ -1,16 +1,27 @@
-#ifndef UBM_H
-#define UBM_H
+#ifndef UBMLAYOUT_H
+#define UBMLAYOUT_H
 #define double long double
-class ubm:public model
+class ubmlayout:public model
 {
     public:
-        double gamma[DOCPERPAGE+2][DOCPERPAGE+2];
+        vector<double> gamma[DOCPERPAGE+2][DOCPERPAGE+2];
         vector<double> doc_rel2;
         void train()
         {
-            name="Ubm:";
+            name="Ubm_layout:";
             doc_rel=vector<double>(docs.size()+1);
             doc_rel2=vector<double>(docs.size()+1);
+            vector<double> nexgamma[DOCPERPAGE+2][DOCPERPAGE+2];
+            vector<int> gamma_cnt[DOCPERPAGE+2][DOCPERPAGE+2];
+            for(int i=1;i<=DOCPERPAGE;++i)
+            {
+                for(int j=1;j<=i;++j)
+                {
+                    gamma[i][j]=vector<double>(MAXVERTICLE+1);
+                    nexgamma[i][j]=vector<double>(MAXVERTICLE+1);
+                    gamma_cnt[i][j]=vector<int>(MAXVERTICLE+1);
+                }
+            }
             for(int i=0;i<docs.size();++i)
             {
                 doc_rel[i]=0.5;
@@ -18,7 +29,8 @@ class ubm:public model
             }
             for(int i=1;i<=DOCPERPAGE;++i)
                 for(int j=1;j<=i;++j)
-                    gamma[i][j]=0.5;
+                    for(int k=0;k<=MAXVERTICLE;++k)
+                        gamma[i][j][k]=0.5;
             int sess_cnt=0;
             double last_LL=-10,sum;
             for(auto &sess:sessions)
@@ -32,8 +44,6 @@ class ubm:public model
                     ++docs[sess.doc_id[i]].train_tim;
             }
             int sess_id,pos_id,new_sess,new_pos;
-            double nexgamma[DOCPERPAGE+2][DOCPERPAGE+2];
-            int gamma_cnt[DOCPERPAGE+2][DOCPERPAGE+2];
             int rnd;
             for(rnd=1;rnd<=MAXROUND;++rnd)
             {
@@ -56,12 +66,17 @@ class ubm:public model
                         }
                         else
                         {
-                            doc_rel2[sess.doc_id[i]]+=(1.-gamma[i][i-last_clkk])*doc_rel[sess.doc_id[i]]/(1.-doc_rel[sess.doc_id[i]]*gamma[i][i-last_clkk]);
+                            doc_rel2[sess.doc_id[i]]+=(1.-gamma[i][i-last_clkk][docs[sess.doc_id[i]].type])*doc_rel[sess.doc_id[i]]/(1.-doc_rel[sess.doc_id[i]]*gamma[i][i-last_clkk][docs[sess.doc_id[i]].type]);
                         }
                     }
                 }
-                memset(nexgamma,0,sizeof(gamma));
-                memset(gamma_cnt,0,sizeof(gamma_cnt));
+                for(int i=1;i<=DOCPERPAGE;++i)
+                    for(int j=1;j<=i;++j)
+                        for(int k=0;k<=MAXVERTICLE;++k)
+                        {
+                            gamma_cnt[i][j][k]=1;
+                            nexgamma[i][j][k]=0.5;
+                        }
                 for(auto &sess:sessions)
                 {
                     if(sess.enable==false)
@@ -71,15 +86,15 @@ class ubm:public model
                     last_clkk=0;
                     for(int i=1;i<=DOCPERPAGE;++i)
                     {
-                        ++gamma_cnt[i][i-last_clkk];
+                        ++gamma_cnt[i][i-last_clkk][docs[sess.doc_id[i]].type];
                         if(sess.click_time[i]>.1)
                         {
-                            nexgamma[i][i-last_clkk]+=1.;
+                            nexgamma[i][i-last_clkk][docs[sess.doc_id[i]].type]+=1.;
                             last_clkk=i;
                         }
                         else
                         {
-                            nexgamma[i][i-last_clkk]+=(1.-doc_rel[sess.doc_id[i]])*gamma[i][i-last_clkk]/(1.-doc_rel[sess.doc_id[i]]*gamma[i][i-last_clkk]);
+                            nexgamma[i][i-last_clkk][docs[sess.doc_id[i]].type]+=(1.-doc_rel[sess.doc_id[i]])*gamma[i][i-last_clkk][docs[sess.doc_id[i]].type]/(1.-doc_rel[sess.doc_id[i]]*gamma[i][i-last_clkk][docs[sess.doc_id[i]].type]);
                         }
                     }
                 }
@@ -88,9 +103,11 @@ class ubm:public model
                         doc_rel[i]=doc_rel2[i]/docs[i].train_tim;
                 for(int i=1;i<=DOCPERPAGE;++i)
                     for(int j=1;j<=i;++j)
-                        gamma[i][j]=nexgamma[i][j]/gamma_cnt[i][j];
+                        for(int k=0;k<=MAXVERTICLE;++k)
+                            gamma[i][j][k]=nexgamma[i][j][k]/gamma_cnt[i][j][k];
                 double now_LL,now_LL2,now_LL1;
                 now_LL=this->test(false,3);
+                cerr<<rnd<<"\t"<<now_LL<<endl;
                 //now_LL2=this->test(false,2);
                 //now_LL1=this->test(false,1);
                 if(now_LL-1e-8<last_LL)
@@ -102,12 +119,13 @@ class ubm:public model
             }
             #ifdef DEBUG
                 cout<<"ROUND:=\t"<<rnd<<endl;
-                for(int i=1;i<=DOCPERPAGE;++i)
-                {
-                    for(int j=1;j<=i;++j)
-                        cout<<gamma[i][j]<<"\t";
-                    puts("");
-                }
+                for(int k=0;k<=MAXVERTICLE;++k)
+                    for(int i=1;i<=DOCPERPAGE;++i)
+                    {
+                        for(int j=1;j<=i;++j)
+                            cout<<gamma[i][j][k]<<"\t";
+                        puts("");
+                    }
             #endif
         }
         void get_click_prob(Session &sess,double* click_prob)
@@ -121,12 +139,12 @@ class ubm:public model
             {
                 if(sess.click_time[i]>.1)
                 {
-                    click_prob[i]=doc_rel[sess.doc_id[i]]*gamma[i][i-last_clkk];
+                    click_prob[i]=doc_rel[sess.doc_id[i]]*gamma[i][i-last_clkk][docs[sess.doc_id[i]].type];
                     last_clkk=i;
                 }
                 else
                 {
-                    click_prob[i]=1.-doc_rel[sess.doc_id[i]]*gamma[i][i-last_clkk];
+                    click_prob[i]=1.-doc_rel[sess.doc_id[i]]*gamma[i][i-last_clkk][docs[sess.doc_id[i]].type];
                 }
             }
         }

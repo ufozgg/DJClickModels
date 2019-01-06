@@ -16,6 +16,7 @@ Auther: THUIR Ruizhe Zhang
 #include"load.h"
 #include"dbn.h"
 #include"mcm.h"
+#include"ubmlayout.h"
 #include"load_feature.h"
 using namespace std;
 int main(int argc,char* argv[])
@@ -140,6 +141,25 @@ int main(int argc,char* argv[])
 			ubm_mod.check();
 		#endif
 	}
+	if(find(mods.begin(),mods.end(),"ubmlayout")!=mods.end())
+	{
+		ubmlayout ubm_mod=ubmlayout();
+		ubm_mod.train();
+		ubm_mod.test();
+		if(pa.get<std::string>("typetest")=="true")
+		{
+			cout<<"Type test ubmlayout:\n";
+			for(int i=0;i<=DOCPERPAGE;++i)
+				cout<<ubm_mod.test(false,2,i)<<"\t";
+			cout<<endl;
+		}
+		ubm_mod.dump_rel();
+		if(pa.get<std::string>("sample")=="true")
+			ubm_mod.sample();
+		#ifdef DEBUG
+			ubm_mod.check();
+		#endif
+	}
 	if(find(mods.begin(),mods.end(),"dbn")!=mods.end())
 	{
 		dbn dbn_mod=dbn();
@@ -166,7 +186,7 @@ int main(int argc,char* argv[])
 		mcm_mod.test();
 		if(pa.get<std::string>("typetest")=="true")
 		{
-			cout<<"Type test dbn:\n";
+			cout<<"Type test mcm:\n";
 			for(int i=0;i<=DOCPERPAGE;++i)
 				cout<<mcm_mod.test(false,2,i)<<"\t";
 			cout<<endl;

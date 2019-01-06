@@ -79,10 +79,12 @@ class dcm:public model
             {
                 doc_rel[i]=(doc_clk[i]+t1)/(doc_cnt[i]+t2);
             }
-            cout<<"Gamma:";
-            for(int i=1;i<=DOCPERPAGE;++i)
-                cout<<"\t"<<gamma[i];
-            cout<<endl;
+            #ifdef DEBUG
+                cout<<"Gamma:";
+                for(int i=1;i<=DOCPERPAGE;++i)
+                    cout<<"\t"<<gamma[i];
+                cout<<endl;
+            #endif
         }
         void get_click_prob(Session &sess,double* click_prob)
         {

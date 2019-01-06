@@ -40,13 +40,19 @@ class mcm:public model
         {
             for(int i=0;i<=docs.size();++i)
             {
-                alpha1[i]=alpha0[i]=s_c1[i]=s_c0[i]=s_e1[i]=s_e0[i]=1e-4;
+                //alpha1[i]=alpha0[i]=s_c1[i]=s_c0[i]=s_e1[i]=s_e0[i]=1;
+                alpha1[i]=1;
+                alpha0[i]=.5;
+                s_c1[i]=1;
+                s_c0[i]=.2;
+                s_e1[i]=.5;
+                s_e0[i]=1;
             }
             for(int i=0;i<=MAXVERTICLE;++i)
-                beta0[i]=beta1[i]=1e-4;
+                beta0[i]=beta1[i]=1;
             for(int i=0;i<=DOCPERPAGE;++i)
                 for(int j=0;j<=DOCPERPAGE;++j)
-                    gamma1[i][j]=gamma0[i][j]=1e-4;
+                    gamma1[i][j]=gamma0[i][j]=.0001;
         }
         void train()
         {
@@ -155,10 +161,12 @@ class mcm:public model
                         gamma[i][j]=gamma1[i][j]/(gamma0[i][j]+gamma1[i][j]);
                         assert(gamma[i][j]<1&&gamma[i][j]>0);
                     }
-                now_ll=this->test(round%100==0,3);
+                now_ll=this->test(false,3);
                 //now_LL2=this->test(false,2);
                 //now_LL1=this->test(false,1);
                 cerr<<"Round:\t"<<round<<"\tLL:\t"<<now_ll<<endl;
+                if(round%10==0)
+                    cerr<<"Test:\t"<<test(false,2)<<endl;
                 if(now_ll-1e-8<last_ll)
                     break;
                 last_ll=now_ll;
