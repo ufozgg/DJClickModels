@@ -24,26 +24,26 @@ int main(int argc,char* argv[])
 	cmdline::parser pa;
 	assert(MINSESSION<=MAXSESSION);
 	pa.add<std::string>("module",'m',"module name such as \"ubm\"",false,"");
-	pa.add<std::string>("save",'s',"format: \"clc\" or \"zrz\"",false,"",cmdline::oneof<std::string>("clc","zrz"));
-	pa.add<std::string>("load",'l',"format: \"clc\" or \"zrz\"or \"zjq\"",false,"",cmdline::oneof<std::string>("clc","zrz","zjq","clcd"));
-	pa.add<std::string>("indir",'i',"format: a dir",false,"");
+	pa.add<std::string>("save",'s',"format: \"clc\"",false,"",cmdline::oneof<std::string>("clc","zrz"));
+	pa.add<std::string>("load",'l',"format: \"clc\" or \"zjq\"",false,"",cmdline::oneof<std::string>("clc","zjq"));
+	pa.add<std::string>("infiles",'i',"input files, none for no file, traindata,testdata,validata split by ','",false,"");
 	pa.add<std::string>("outdir",'o',"format: a dir",false,"");
 	pa.add<std::string>("filter",'f',"filter or not",false,"true");
 	pa.add<std::string>("sample",'S',"sample or not",false,"false");
 	pa.add<std::string>("feature",'F',"load feature or not",false,"false");
 	pa.add<std::string>("typetest",'t',"test by type",false,"false");
 	pa.add<std::string>("round",'r',"round for models",false,"100");
-	pa.add<std::string>("usetrained",'u',"if true ,not train ,load args from file",false,"false");
+	//pa.add<std::string>("usetrained",'u',"if true ,not train ,load args from file",false,"false");
 	//pa.add<std::string>("data",'d',"load data from,default from ../data/part-r-xxxxx",false,"",cmdline::oneof<std::string>("ubm"));
 	pa.parse_check(argc,argv);
 	std::cerr<<pa.get<std::string>("module")<<endl; 
 	std::cerr<<pa.get<std::string>("save")<<endl;
 	std::cerr<<pa.get<std::string>("load")<<endl;
-	std::cerr<<pa.get<std::string>("indir")<<endl;
+	std::cerr<<pa.get<std::string>("infiles")<<endl;
 	std::cerr<<pa.get<std::string>("outdir")<<endl;
 	MAXROUND=atoi(pa.get<std::string>("round").data());
-	if(pa.get<std::string>("indir")!="")
-		data_dir=pa.get<std::string>("indir");
+	/*if(pa.get<std::string>("infiles")!="")
+		data_dir=pa.get<std::string>("indir");*/
 	if(pa.get<std::string>("outdir")!="")
 		save_file=pa.get<std::string>("outdir");
 	if(pa.get<std::string>("filter")=="true")
@@ -58,7 +58,28 @@ int main(int argc,char* argv[])
 	Query z=Query();
 	z.enable=false;
 	querys.push_back(z);
-	if(pa.get<std::string>("usetrained")=="false")
+	vector<string> datas;
+	datas=split(pa.get<std::string>("infiles"),',');
+	if(datas.size()>3)
+	{
+		cerr<<"More than 3 data"<<endl;
+		return 0;
+	}
+	while(datas.size()<3)
+		datas.push_back("none");
+	for(int i=0;i<3;++i)
+		if(datas[i]!="none")
+		{
+			if(pa.get<std::string>("load")=="zjq")
+				load_data_zjq_181113(datas[i],i+1);
+			if(pa.get<std::string>("load")=="clc")
+				read_clc_file(datas[i],i+1);
+		}
+	if(pa.get<std::string>("feature")!="false")
+	{
+		load_zjq_feature(pa.get<std::string>("feature"));
+	}
+	/*if(pa.get<std::string>("usetrained")=="false")
 	{
 		if(pa.get<std::string>("load")=="zjq") 
 			load_data_zjq_181113(data_dir);
@@ -73,12 +94,8 @@ int main(int argc,char* argv[])
 		if(find(savekey.begin(),savekey.end(),"clc")!=savekey.end())
 			save_as_clc();
 	}
-	if(pa.get<std::string>("feature")!="false")
-	{
-		load_zjq_feature(pa.get<std::string>("feature"));
-	}
 	if(pa.get<std::string>("load")=="clcd"&&pa.get<std::string>("usetrained")=="true")
-		read_clc(pa.get<std::string>("load")=="clcd",false);
+		read_clc(pa.get<std::string>("load")=="clcd",false);*/
 	cerr<<"Format error: "<<Filter[0]<<endl;
 	cerr<<"Head Format error: "<<Filter[1]<<endl;
 	cerr<<"Not first page: "<<Filter[2]<<endl;
@@ -95,7 +112,7 @@ int main(int argc,char* argv[])
 	if(find(mods.begin(),mods.end(),"baseline")!=mods.end())
 	{
 		baseline baseline_mod=baseline();
-		if(pa.get<std::string>("usetrained")=="false")
+		if(datas[0]!="none")
 			baseline_mod.train();
 		else
 			baseline_mod.load();
@@ -117,7 +134,7 @@ int main(int argc,char* argv[])
 	if(find(mods.begin(),mods.end(),"dcm")!=mods.end())
 	{
 		dcm dcm_mod=dcm();
-		if(pa.get<std::string>("usetrained")=="false")
+		if(datas[0]!="none")
 			dcm_mod.train();
 		else
 			dcm_mod.load();
@@ -146,7 +163,7 @@ int main(int argc,char* argv[])
 	if(find(mods.begin(),mods.end(),"ubm")!=mods.end())
 	{
 		ubm ubm_mod=ubm();
-		if(pa.get<std::string>("usetrained")=="false")
+		if(datas[0]!="none")
 			ubm_mod.train();
 		else
 			ubm_mod.load();
@@ -168,7 +185,7 @@ int main(int argc,char* argv[])
 	if(find(mods.begin(),mods.end(),"ubmlayout")!=mods.end())
 	{
 		ubmlayout ubm_mod=ubmlayout();
-		if(pa.get<std::string>("usetrained")=="false")
+		if(datas[0]!="none")
 			ubm_mod.train();
 		else
 			ubm_mod.load();
@@ -190,7 +207,7 @@ int main(int argc,char* argv[])
 	if(find(mods.begin(),mods.end(),"dbn")!=mods.end())
 	{
 		dbn dbn_mod=dbn();
-		if(pa.get<std::string>("usetrained")=="false")
+		if(datas[0]!="none")
 			dbn_mod.train();
 		else
 			dbn_mod.load();
@@ -212,7 +229,7 @@ int main(int argc,char* argv[])
 	if(find(mods.begin(),mods.end(),"mcm")!=mods.end())
 	{
 		mcm mcm_mod=mcm();
-		if(pa.get<std::string>("usetrained")=="false")
+		if(datas[0]!="none")
 			mcm_mod.train();
 		else
 			mcm_mod.load();

@@ -34,7 +34,7 @@ class mcm:public model
             }
             for(int i=0;i<=MAXVERTICLE;++i)
                 beta[i]=0.5;
-            train_clear();
+            //train_clear();
         }
         void train_clear()
         {
@@ -171,6 +171,76 @@ class mcm:public model
                     break;
                 last_ll=now_ll;
             }
+
+            FILE* outfile=fopen("../output/mcm_args","w");
+            assert(outfile);
+            for(int i=0;i<=DOCPERPAGE;++i)
+            for(int j=0;j<=DOCPERPAGE;++j)
+            {
+                fprintf(outfile,"%.8lf",gamma[i][j]);
+                if(j==DOCPERPAGE)
+                    fprintf(outfile,"\n");
+                else
+                    fprintf(outfile,"\t");
+            }
+            fprintf(outfile,"%u\n",MAXVERTICLE);
+            for(int i=0;i<=MAXVERTICLE;++i)
+            {
+                fprintf(outfile,"%.8lf",beta[i]);
+                if(i==MAXVERTICLE)
+                    fprintf(outfile,"\n");
+                else
+                    fprintf(outfile,"\t");
+            }
+            fprintf(outfile,"%u\n",docs.size());
+            for(int i=0;i<docs.size();++i)
+                if(docs[i].name!="")
+                {
+                    fprintf(outfile,"%s",docs[i].name.data());
+                    fprintf(outfile,"\t%.8lf\t%.8lf\t%.8lf\n",alpha[i],s_c[i],s_e[i]);
+                }
+            fclose(outfile);
+        }
+        void load()
+        {
+            FILE* infile=fopen("../output/mcm_args","r");
+            assert(infile);
+            for(int i=0;i<=DOCPERPAGE;++i)
+                for(int j=0;j<=DOCPERPAGE;++j)
+                {
+                    fscanf(infile,"%lf",gamma[i]+j);
+                }
+            char namee[100];
+            double r1,r2,r3;
+            string name;
+            unsigned int cnt;
+            fscanf(infile,"%u",&cnt);
+            MAXVERTICLE=cnt;
+            beta=vector<double>(cnt+1);
+            for(int i=0;i<=MAXVERTICLE;++i)
+                fscanf(infile,"%lf",&beta[i]);
+            //cerr<<cnt<<endl;
+            fscanf(infile,"%u",&cnt);
+            alpha=vector<double>(doc_name2id.size()+cnt+2);
+            s_c=vector<double>(doc_name2id.size()+cnt+2);
+            s_e=vector<double>(doc_name2id.size()+cnt+2);
+            while(fscanf(infile,"%s%lf%lf%lf",namee,&r1,&r2,&r3)==4)
+            {
+                name=namee;
+                int w=doc_name2id[name];
+                if(w==0)
+                {
+                    w=docs.size();
+                    Doc d;
+                    d.name=name;
+                    docs.push_back(d);
+                    doc_name2id[name]=w;
+                }
+                alpha[w]=r1;
+                s_c[w]=r2;
+                s_e[w]=r3;
+            }
+            fclose(infile);
         }
         void get_prob(Session &sess)
         {

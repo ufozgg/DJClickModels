@@ -8,9 +8,13 @@ class dbn:public model
         vector<double> Qa,Qs;
         vector<int> clk_tim;
         double gamma=.9;//.925;
+        dbn()
+        {
+            name="Dbn";
+        }
         void train()
         {
-            name="Dbn:";
+            
             doc_rel=vector<double>(docs.size()+1);
             a=vector<double>(docs.size()+1);
             s=vector<double>(docs.size()+1);
@@ -108,6 +112,45 @@ class dbn:public model
                 {
                     doc_rel[i]=a[i]*s[i];
                 }
+            FILE* outfile=fopen("../output/dbn_args","w");
+            assert(outfile);
+            fprintf(outfile,"%.8lf\n",gamma);
+            fprintf(outfile,"%u\n",docs.size());
+            for(int i=0;i<docs.size();++i)
+                if(docs[i].name!="")
+                {
+                    fprintf(outfile,"%s",docs[i].name.data());
+                    fprintf(outfile,"\t%.8lf\t%.8lf\n",a[i],s[i]);
+                }
+            fclose(outfile);
+        }
+        void load()
+        {
+            FILE* infile=fopen("../output/dbn_args","r");
+            fscanf(infile,"%lf",&gamma);
+            char namee[100];
+            double aa,ss;
+            string name;
+            unsigned int cnt;
+            fscanf(infile,"%u",&cnt);
+            a=vector<double>(doc_name2id.size()+cnt+2);
+            s=vector<double>(doc_name2id.size()+cnt+2);
+            while(fscanf(infile,"%s%lf%lf",namee,&aa,&ss)==3)
+            {
+                name=namee;
+                int w=doc_name2id[name];
+                if(w==0)
+                {
+                    w=docs.size();
+                    Doc d;
+                    d.name=name;
+                    docs.push_back(d);
+                    doc_name2id[name]=w;
+                }
+                a[w]=aa;
+                s[w]=ss;
+            }
+            fclose(infile);
         }
         void get_examine_prob(Session &sess,double *pr)
         {

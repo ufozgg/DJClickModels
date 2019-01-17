@@ -13,9 +13,9 @@ class ubmlayout:public model
             doc_rel2=vector<double>(docs.size()+1);
             vector<double> nexgamma[DOCPERPAGE+2][DOCPERPAGE+2];
             vector<int> gamma_cnt[DOCPERPAGE+2][DOCPERPAGE+2];
-            for(int i=1;i<=DOCPERPAGE;++i)
+            for(int i=0;i<=DOCPERPAGE;++i)
             {
-                for(int j=1;j<=i;++j)
+                for(int j=0;j<=DOCPERPAGE;++j)
                 {
                     gamma[i][j]=vector<double>(MAXVERTICLE+1);
                     nexgamma[i][j]=vector<double>(MAXVERTICLE+1);
@@ -127,6 +127,66 @@ class ubmlayout:public model
                         puts("");
                     }
             #endif
+            FILE* outfile=fopen("../output/ubmlayout_args","w");
+            assert(outfile);
+            for(int k=0;k<=MAXVERTICLE;++k)
+            for(int i=0;i<=DOCPERPAGE;++i)
+            for(int j=0;j<=DOCPERPAGE;++j)
+            {
+                fprintf(outfile,"%.8lf",gamma[i][j][k]);
+                if(j==DOCPERPAGE)
+                    fprintf(outfile,"\n");
+                else
+                    fprintf(outfile,"\t");
+            }
+            fprintf(outfile,"%u\n",docs.size());
+            for(int i=0;i<docs.size();++i)
+                if(docs[i].name!="")
+                {
+                    fprintf(outfile,"%s",docs[i].name.data());
+                    fprintf(outfile,"\t%.8lf\n",doc_rel[i]);
+                }
+            fclose(outfile);
+        }
+        void load()
+        {
+            FILE* infile=fopen("../output/ubmlayout_args","r");
+            assert(infile);
+            for(int i=0;i<=DOCPERPAGE;++i)
+            {
+                for(int j=0;j<=DOCPERPAGE;++j)
+                {
+                    gamma[i][j]=vector<double>(MAXVERTICLE+1);
+                }
+            }
+            cerr<<MAXVERTICLE<<endl;
+            for(int k=0;k<=MAXVERTICLE;++k)
+            for(int i=0;i<=DOCPERPAGE;++i)
+                for(int j=0;j<=DOCPERPAGE;++j)
+                {
+                    fscanf(infile,"%lf",&gamma[i][j][k]);
+                }
+            char namee[100];
+            double rel;
+            string name;
+            unsigned int cnt;
+            fscanf(infile,"%u",&cnt);
+            doc_rel=vector<double>(doc_name2id.size()+cnt+2);
+            while(fscanf(infile,"%s%lf",namee,&rel)==2)
+            {
+                name=namee;
+                int w=doc_name2id[name];
+                if(w==0)
+                {
+                    w=docs.size();
+                    Doc d;
+                    d.name=name;
+                    docs.push_back(d);
+                    doc_name2id[name]=w;
+                }
+                doc_rel[w]=rel;
+            }
+            fclose(infile);
         }
         void get_click_prob(Session &sess,double* click_prob)
         {

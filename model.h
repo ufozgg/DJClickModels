@@ -51,7 +51,7 @@ class model
                 fprintf(file,"%s\t",querys[sess.query_id].name.data());
                 for(int i=1;i<=DOCPERPAGE;++i)
                 {
-                    fprintf(file,"%s%c",docs[sess.doc_id[i]].name.data(),i==DOCPERPAGE?'\t':',');
+                    fprintf(file,"%s%c",split(docs[sess.doc_id[i]].name,'#')[1].data(),i==DOCPERPAGE?'\t':',');
                 }
                 for(int i=1;i<=DOCPERPAGE;++i)
                 {

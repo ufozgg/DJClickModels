@@ -2,7 +2,7 @@
 #define LOAD_H
 #include "common.h"
 #include "data_struct.h"
-void line_data_zjq_181113(const string &line)
+void line_data_zjq_181113(const string &line,int type)
 {
 	if(line.size()<=10)
 		return;
@@ -21,22 +21,23 @@ void line_data_zjq_181113(const string &line)
 	for(int i=0;i<=9;++i)
 		addDoc(doc[i],now,i+1,clk[i]=="0"?0:1,1.0);
 	now.enable=1;
+	now.kind=type;
 	++querys[now.query_id].sess_cnt;
 	sessions.push_back(now);
 }
 
-void load_data_zjq_181113(const string &indir)
+void load_data_zjq_181113(const string &indir,int type)
 {
 	//FILE *train_in=fopen("../../data/log_data/click_data_train","r");
 	fstream infile;
 	infile.open(indir.data(),ios::in);
 	//infile.open("../../log_data/click_data_test",ios::in);
-	cout<<"Open file : "<<"train"<<endl;
+	//cout<<"Open file : "<<"train"<<endl;
 	int cnt=0;
 	while(infile)
 	{
 		infile.getline(tmp,MAXLINELEN);
-		line_data_zjq_181113(tmp);
+		line_data_zjq_181113(tmp,type);
 		++cnt;
 		if(cnt%1000000==0)
 			cout<<"Load "<<cnt<<" lines."<<endl;
@@ -130,7 +131,7 @@ void div1to3()
 			sessions[sess_tmp[sess_tmp.size()-j].id].kind=3;
 	}
 }
-void read_clc(bool clcd,bool train_data=true)
+/*void read_clc(bool clcd,bool train_data=true)
 {
 	int i,cnt=0,len;
 	string line;
@@ -169,6 +170,6 @@ void read_clc(bool clcd,bool train_data=true)
 				break;
 		}
 	}
-}
+}*/
 #endif
 

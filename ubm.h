@@ -109,6 +109,56 @@ class ubm:public model
                     puts("");
                 }
             #endif
+            FILE* outfile=fopen("../output/ubm_args","w");
+            assert(outfile);
+            for(int i=0;i<=DOCPERPAGE;++i)
+            for(int j=0;j<=DOCPERPAGE;++j)
+            {
+                fprintf(outfile,"%.8lf",gamma[i][j]);
+                if(j==DOCPERPAGE)
+                    fprintf(outfile,"\n");
+                else
+                    fprintf(outfile,"\t");
+            }
+            fprintf(outfile,"%u\n",docs.size());
+            for(int i=0;i<docs.size();++i)
+                if(docs[i].name!="")
+                {
+                    fprintf(outfile,"%s",docs[i].name.data());
+                    fprintf(outfile,"\t%.8lf\n",doc_rel[i]);
+                }
+            fclose(outfile);
+        }
+        void load()
+        {
+            FILE* infile=fopen("../output/ubm_args","r");
+            assert(infile);
+            for(int i=0;i<=DOCPERPAGE;++i)
+                for(int j=0;j<=DOCPERPAGE;++j)
+                {
+                    fscanf(infile,"%lf",gamma[i]+j);
+                }
+            char namee[100];
+            double rel;
+            string name;
+            unsigned int cnt;
+            fscanf(infile,"%u",&cnt);
+            doc_rel=vector<double>(doc_name2id.size()+cnt+2);
+            while(fscanf(infile,"%s%lf",namee,&rel)==2)
+            {
+                name=namee;
+                int w=doc_name2id[name];
+                if(w==0)
+                {
+                    w=docs.size();
+                    Doc d;
+                    d.name=name;
+                    docs.push_back(d);
+                    doc_name2id[name]=w;
+                }
+                doc_rel[w]=rel;
+            }
+            fclose(infile);
         }
         void get_click_prob(Session &sess,double* click_prob)
         {
