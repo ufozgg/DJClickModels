@@ -1,6 +1,6 @@
 #ifndef DBN_H
 #define DBN_H
-#define double long double
+//#define double long double
 class dbn:public model
 {
     public:

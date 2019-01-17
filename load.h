@@ -130,18 +130,21 @@ void div1to3()
 			sessions[sess_tmp[sess_tmp.size()-j].id].kind=3;
 	}
 }
-void read_clc(bool clcd)
+void read_clc(bool clcd,bool train_data=true)
 {
 	int i,cnt=0,len;
 	string line;
 	string file_prefix=data_dir,file_name;
 	if(clcd)
 	{
-		file_name=file_prefix+"_train.clc";
-		if(!read_clc_file(file_name,1))
+		if(train_data)
 		{
-			cout<<"ERROR: NO TRAIN DATA"<<endl;
-			exit(0);
+			file_name=file_prefix+"_train.clc";
+			if(!read_clc_file(file_name,1))
+			{
+				cout<<"ERROR: NO TRAIN DATA"<<endl;
+				exit(0);
+			}
 		}
 		file_name=file_prefix+"_test.clc";
 		if(!read_clc_file(file_name,2))
@@ -149,9 +152,12 @@ void read_clc(bool clcd)
 			cout<<"ERROR: NO TEST DATA"<<endl;
 			exit(0);
 		}
-		file_name=file_prefix+"_val.clc";
-		if(!read_clc_file(file_name,3))
-			div1to3();
+		if(train_data)
+		{
+			file_name=file_prefix+"_val.clc";
+			if(!read_clc_file(file_name,3))
+				div1to3();
+		}
 	}
 	else
 	{

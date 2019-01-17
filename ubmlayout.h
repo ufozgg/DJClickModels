@@ -1,6 +1,6 @@
 #ifndef UBMLAYOUT_H
 #define UBMLAYOUT_H
-#define double long double
+//#define double long double
 class ubmlayout:public model
 {
     public:

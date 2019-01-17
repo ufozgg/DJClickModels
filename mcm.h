@@ -1,6 +1,6 @@
 #ifndef MCM_H
 #define MCM_H
-#define double long double
+//#define double long double
 class mcm:public model
 {
     public:

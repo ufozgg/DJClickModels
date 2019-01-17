@@ -14,13 +14,18 @@ int line_zjq_feature(const string &line)
     {
         string name=res[0]+"#"+doc_names[i];
         w=doc_name2id[name];
-        if(w)
+        if(w==0)
         {
-            ++ret;
-            docs[w].type=atoi(doc_features[i].data());
-            if(docs[w].type>=MAXVERTICLE)
-                MAXVERTICLE=docs[w].type+1;
+            w=docs.size();
+            Doc d;
+            d.name=name;
+            docs.push_back(d);
+            doc_name2id[name]=w;
         }
+        ++ret;
+        docs[w].type=atoi(doc_features[i].data());
+        if(docs[w].type>=MAXVERTICLE)
+            MAXVERTICLE=docs[w].type+1;
     }
     return ret;
 }

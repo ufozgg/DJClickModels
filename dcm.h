@@ -1,15 +1,18 @@
 #ifndef DCM_H
 #define DCM_H
-#define double long double
+//#define double long double
 class dcm:public model
 {
     public:
         vector<int> doc_cnt,doc_clk;
         int pos_last_clk[DOCPERPAGE+2],pos_clk[DOCPERPAGE+2];
         double gamma[DOCPERPAGE+2];
+        dcm()
+        {
+            name="DCM";
+        }
         void train()
         {
-            name="DCM:";
             doc_cnt=vector<int>(docs.size()+1);
             doc_clk=vector<int>(docs.size()+1);
             doc_rel=vector<double>(docs.size()+1);
@@ -85,6 +88,54 @@ class dcm:public model
                     cout<<"\t"<<gamma[i];
                 cout<<endl;
             #endif
+            FILE* outfile=fopen("../output/dcm_args","w");
+            assert(outfile);
+            for(int i=0;i<=DOCPERPAGE;++i)
+            {
+                fprintf(outfile,"%.8lf",gamma[i]);
+                if(i==DOCPERPAGE)
+                    fprintf(outfile,"\n");
+                else
+                    fprintf(outfile,"\t");
+            }
+            fprintf(outfile,"%u\n",docs.size());
+            for(int i=0;i<docs.size();++i)
+                if(docs[i].name!="")
+                {
+                    fprintf(outfile,"%s",docs[i].name.data());
+                    fprintf(outfile,"\t%.8lf\n",doc_rel[i]);
+                }
+            fclose(outfile);
+        }
+        void load()
+        {
+            FILE* infile=fopen("../output/dcm_args","r");
+            assert(infile);
+            for(int i=0;i<=DOCPERPAGE;++i)
+            {
+                fscanf(infile,"%lf",gamma+i);
+            }
+            char namee[100];
+            double rel;
+            string name;
+            unsigned int cnt;
+            fscanf(infile,"%u",&cnt);
+            doc_rel=vector<double>(doc_name2id.size()+cnt+2);
+            while(fscanf(infile,"%s%lf",namee,&rel)==2)
+            {
+                name=namee;
+                int w=doc_name2id[name];
+                if(w==0)
+                {
+                    w=docs.size();
+                    Doc d;
+                    d.name=name;
+                    docs.push_back(d);
+                    doc_name2id[name]=w;
+                }
+                doc_rel[w]=rel;
+            }
+            fclose(infile);
         }
         void get_click_prob(Session &sess,double* click_prob)
         {

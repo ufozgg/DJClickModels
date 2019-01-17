@@ -1,6 +1,6 @@
 #ifndef UBM_H
 #define UBM_H
-#define double long double
+//#define double long double
 class ubm:public model
 {
     public:

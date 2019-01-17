@@ -6,7 +6,6 @@
 //Filter when load
 #define MAXDOCPERPAGE 13
 //Filter when load
-#define MAXROUND 10000
 #define DOCPERPAGE MINDOCPERPAGE
 #define MINCLICK 0
 //Filter when load(by enable flag)
@@ -26,6 +25,7 @@ extern bool IFFILTER=false,IFDIV=false;
 extern std::string data_dir="../data/part-r-";
 extern std::string save_file="../prework/part-r-";
 extern int MAXVERTICLE=1;
+extern int MAXROUND=100;
 //Use the save_file option,we save all data in orignal format EXCEPT been filted. 
 //If the save_dir equals to data_dir ,source data MAY BE RECOVERED.
 #endif

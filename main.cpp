@@ -32,6 +32,8 @@ int main(int argc,char* argv[])
 	pa.add<std::string>("sample",'S',"sample or not",false,"false");
 	pa.add<std::string>("feature",'F',"load feature or not",false,"false");
 	pa.add<std::string>("typetest",'t',"test by type",false,"false");
+	pa.add<std::string>("round",'r',"round for models",false,"100");
+	pa.add<std::string>("usetrained",'u',"if true ,not train ,load args from file",false,"false");
 	//pa.add<std::string>("data",'d',"load data from,default from ../data/part-r-xxxxx",false,"",cmdline::oneof<std::string>("ubm"));
 	pa.parse_check(argc,argv);
 	std::cerr<<pa.get<std::string>("module")<<endl; 
@@ -39,6 +41,7 @@ int main(int argc,char* argv[])
 	std::cerr<<pa.get<std::string>("load")<<endl;
 	std::cerr<<pa.get<std::string>("indir")<<endl;
 	std::cerr<<pa.get<std::string>("outdir")<<endl;
+	MAXROUND=atoi(pa.get<std::string>("round").data());
 	if(pa.get<std::string>("indir")!="")
 		data_dir=pa.get<std::string>("indir");
 	if(pa.get<std::string>("outdir")!="")
@@ -55,22 +58,27 @@ int main(int argc,char* argv[])
 	Query z=Query();
 	z.enable=false;
 	querys.push_back(z);
-	if(pa.get<std::string>("load")=="zjq") 
-		load_data_zjq_181113(data_dir);
-	if(pa.get<std::string>("load")=="clcd"||pa.get<std::string>("load")=="clc")
-		read_clc(pa.get<std::string>("load")=="clcd");
-	if(pa.get<std::string>("load")=="default")
-		read_Data_20170903();
-	//return 0;
-	if(pa.get<std::string>("filter")=="true")
-		Data_Filter();
+	if(pa.get<std::string>("usetrained")=="false")
+	{
+		if(pa.get<std::string>("load")=="zjq") 
+			load_data_zjq_181113(data_dir);
+		if(pa.get<std::string>("load")=="clcd"||pa.get<std::string>("load")=="clc")
+			read_clc(pa.get<std::string>("load")=="clcd");
+		if(pa.get<std::string>("load")=="default")
+			read_Data_20170903();
+		//return 0;
+		if(pa.get<std::string>("filter")=="true")
+			Data_Filter();
+		vector<string> savekey=split(pa.get<std::string>("save"),',');
+		if(find(savekey.begin(),savekey.end(),"clc")!=savekey.end())
+			save_as_clc();
+	}
 	if(pa.get<std::string>("feature")!="false")
 	{
 		load_zjq_feature(pa.get<std::string>("feature"));
 	}
-	vector<string> savekey=split(pa.get<std::string>("save"),',');
-	if(find(savekey.begin(),savekey.end(),"clc")!=savekey.end())
-		save_as_clc();
+	if(pa.get<std::string>("load")=="clcd"&&pa.get<std::string>("usetrained")=="true")
+		read_clc(pa.get<std::string>("load")=="clcd",false);
 	cerr<<"Format error: "<<Filter[0]<<endl;
 	cerr<<"Head Format error: "<<Filter[1]<<endl;
 	cerr<<"Not first page: "<<Filter[2]<<endl;
@@ -87,7 +95,10 @@ int main(int argc,char* argv[])
 	if(find(mods.begin(),mods.end(),"baseline")!=mods.end())
 	{
 		baseline baseline_mod=baseline();
-		baseline_mod.train();
+		if(pa.get<std::string>("usetrained")=="false")
+			baseline_mod.train();
+		else
+			baseline_mod.load();
 		baseline_mod.test();
 		if(pa.get<std::string>("typetest")=="true")
 		{
@@ -106,8 +117,18 @@ int main(int argc,char* argv[])
 	if(find(mods.begin(),mods.end(),"dcm")!=mods.end())
 	{
 		dcm dcm_mod=dcm();
-		dcm_mod.train();
-		dcm_mod.test();
+		if(pa.get<std::string>("usetrained")=="false")
+			dcm_mod.train();
+		else
+			dcm_mod.load();
+		if(pa.get<std::string>("sample")=="testdata")
+		{
+			dcm_mod.sample_testdata();//TODO: xxx
+		}
+		else
+		{
+			dcm_mod.test();
+		}
 		if(pa.get<std::string>("typetest")=="true")
 		{
 			cout<<"Type test dcm:\n";
@@ -125,7 +146,10 @@ int main(int argc,char* argv[])
 	if(find(mods.begin(),mods.end(),"ubm")!=mods.end())
 	{
 		ubm ubm_mod=ubm();
-		ubm_mod.train();
+		if(pa.get<std::string>("usetrained")=="false")
+			ubm_mod.train();
+		else
+			ubm_mod.load();
 		ubm_mod.test();
 		if(pa.get<std::string>("typetest")=="true")
 		{
@@ -144,7 +168,10 @@ int main(int argc,char* argv[])
 	if(find(mods.begin(),mods.end(),"ubmlayout")!=mods.end())
 	{
 		ubmlayout ubm_mod=ubmlayout();
-		ubm_mod.train();
+		if(pa.get<std::string>("usetrained")=="false")
+			ubm_mod.train();
+		else
+			ubm_mod.load();
 		ubm_mod.test();
 		if(pa.get<std::string>("typetest")=="true")
 		{
@@ -163,7 +190,10 @@ int main(int argc,char* argv[])
 	if(find(mods.begin(),mods.end(),"dbn")!=mods.end())
 	{
 		dbn dbn_mod=dbn();
-		dbn_mod.train();
+		if(pa.get<std::string>("usetrained")=="false")
+			dbn_mod.train();
+		else
+			dbn_mod.load();
 		dbn_mod.test();
 		if(pa.get<std::string>("typetest")=="true")
 		{
@@ -182,7 +212,10 @@ int main(int argc,char* argv[])
 	if(find(mods.begin(),mods.end(),"mcm")!=mods.end())
 	{
 		mcm mcm_mod=mcm();
-		mcm_mod.train();
+		if(pa.get<std::string>("usetrained")=="false")
+			mcm_mod.train();
+		else
+			mcm_mod.load();
 		mcm_mod.test();
 		if(pa.get<std::string>("typetest")=="true")
 		{
@@ -198,5 +231,6 @@ int main(int argc,char* argv[])
 			mcm_mod.check();
 		#endif
 	}
+	cerr<<"Vertical number:="<<MAXVERTICLE<<endl;
 	return 0;
 } 

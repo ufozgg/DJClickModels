@@ -1,6 +1,6 @@
 #ifndef MODEL_H
 #define MODEL_H
-#define double long double
+//#define double long double
 //#include<alghorithms>
 bool istest(Session &sess,int cnt)
 {
@@ -24,9 +24,47 @@ class model
 		string name;
         vector<double> doc_rel;
         vector<int> shuffle;
+        bool uptodown=true;
         virtual void get_click_prob(Session &sess,double* click_prob)=0;
         //virtual void get_one_sample(Session &sess,bool* clk)=0;
-        void get_one_sample(Session &sess,bool* clk)
+        void sample_testdata()
+        {
+            FILE* file=fopen(("../output/_"+name+"_sample").data(),"w");
+            double pr[DOCPERPAGE+2],prob[DOCPERPAGE+2];
+            for(auto &sess:sessions)
+            {
+                if(!sess.enable)
+                    continue;
+                for(int i=1;i<=DOCPERPAGE;++i)
+                {
+                    get_click_prob(sess,pr);
+                    if(sess.click_time[i]<0.1)
+                        prob[i]=1.0-pr[i];
+                    else
+                        prob[i]=pr[i];
+                    if(rand()%10000<prob[i]*10000)
+                        sess.click_time[i]=1;
+                    else
+                        sess.click_time[i]=0;
+                }
+                //queryid \t urlids \t pobs \t clicks
+                fprintf(file,"%s\t",querys[sess.query_id].name.data());
+                for(int i=1;i<=DOCPERPAGE;++i)
+                {
+                    fprintf(file,"%s%c",docs[sess.doc_id[i]].name.data(),i==DOCPERPAGE?'\t':',');
+                }
+                for(int i=1;i<=DOCPERPAGE;++i)
+                {
+                    fprintf(file,"%.6lf%c",prob[i],i==DOCPERPAGE?'\t':',');
+                }
+                for(int i=1;i<=DOCPERPAGE;++i)
+                {
+                    fprintf(file,"%d%c",sess.click_time[i]>0.1?1:0,i==DOCPERPAGE?'\n':',');
+                }
+            }
+            fclose(file);
+        }
+        void get_one_sample(Session &sess,bool* clk,double* pro)
         {
             Session w=Session(sess);
             double pr[DOCPERPAGE+2];
@@ -35,6 +73,7 @@ class model
                 get_click_prob(w,pr);
                 if(w.click_time[i]<.1)
                     pr[i]=1.-pr[i];
+                pro[i]=pr[i];//pro=P(CLK=1)
                 if(rand()%10000<pr[i]*10000)
                     w.click_time[i]=i;
                 else
@@ -58,7 +97,7 @@ class model
             std::random_shuffle(shuffle.begin(),shuffle.end());
             int cnt=0;
             bool clk[DOCPERPAGE+2];
-            double ctr=0,ctr_pos[DOCPERPAGE+2];
+            double ctr=0,ctr_pos[DOCPERPAGE+2],pro[DOCPERPAGE+2];
             int first_click[DOCPERPAGE+2],last_click[DOCPERPAGE+2],hamming[DOCPERPAGE+2],click_num[DOCPERPAGE+2];
             //vector<double> cita;
             for(int i=0;i<=DOCPERPAGE;++i)
@@ -70,12 +109,12 @@ class model
                 if(sess.kind!=kind)
                     continue;
                 ++cnt;
-                for(int j=1;j<=DOCPERPAGE;++j)
+/*                for(int j=1;j<=DOCPERPAGE;++j)
                     if(sess.click_time[j]>.1)
                         clk[j]=1;
                     else
-                        clk[j]=0;//ZRZ ERROR
-                //get_one_sample(sess,clk);
+                        clk[j]=0;//ZRZ ERROR*/
+                get_one_sample(sess,clk,pro);
                 int hamm=0,cc=0;
                 int fir_clk=0,las_clk=0;
                 for(int j=1;j<=DOCPERPAGE;++j)
@@ -153,6 +192,8 @@ class model
             }
             cerr<<"CHECK MODEL FINISHED"<<endl;
         }
+        void load()
+        {}
 		double test(bool out=true,int kind=2,int type=-1)
 		{
             if(out)
