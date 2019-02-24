@@ -8,7 +8,7 @@ class ubm:public model
         vector<double> doc_rel2;
         void train()
         {
-            name="Ubm:";
+            name="Ubm";
             doc_rel=vector<double>(docs.size()+1);
             doc_rel2=vector<double>(docs.size()+1);
             for(int i=0;i<docs.size();++i)

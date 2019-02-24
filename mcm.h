@@ -11,7 +11,7 @@ class mcm:public model
         vector<double> alpha,beta,s_c,s_e;
         void train_init()
         {
-            name="Mcm:";
+            name="Mcm";
             doc_rel=vector<double>(docs.size()+1);
             alpha=vector<double>(docs.size()+1);
             alpha1=vector<double>(docs.size()+1);

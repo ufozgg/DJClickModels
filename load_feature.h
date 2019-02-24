@@ -58,7 +58,7 @@ bool load_zjq_feature(string file_name)
         for(int i=1;i<=DOCPERPAGE;++i)
             if(docs[sess.doc_id[i]].type)
                 ++sess.type;
-        if(sess.click_cnt==0)
+        //if(sess.click_cnt)
             ++verticle_num[sess.kind][sess.type];
     }
     cout<<"Verticle number cnt"<<endl;

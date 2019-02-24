@@ -8,7 +8,7 @@ class ubmlayout:public model
         vector<double> doc_rel2;
         void train()
         {
-            name="Ubm_layout:";
+            name="Ubm_layout";
             doc_rel=vector<double>(docs.size()+1);
             doc_rel2=vector<double>(docs.size()+1);
             vector<double> nexgamma[DOCPERPAGE+2][DOCPERPAGE+2];

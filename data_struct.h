@@ -6,6 +6,7 @@ using namespace std;
 int doc_per_page[MAXDOCPERPAGE+1];
 int qFilter[10];
 int Filter[10];
+unordered_map<int,int> v_type;
 class Doc
 {
     public:
@@ -71,7 +72,7 @@ unordered_map<string,int> doc_name2id;
 unordered_map<string,int> feature_name2id;
 void uidadd(string uid,Session &now);
 void qryadd(string qry_w,Session &now);
-void addDoc(string doc_name,Session &now,int pos,int ifclick,double clicktime);
+void addDoc(string doc_name,Session &now,int pos,int ifclick,double clicktime,int ty);
 void line_Data_20170903(const string &line);
 void read_Data_20170903();
 char tmp[MAXLINELEN];
@@ -107,7 +108,7 @@ void qryadd(string qry_w,Session &now)
 	now.query_nex=querys[w].last;
 	querys[w].last=now.id;
 }
-void addDoc(string doc_name,Session &now,int pos,int ifclick,double clicktime)
+void addDoc(string doc_name,Session &now,int pos,int ifclick,double clicktime,int ty=0)
 {
 	doc_name=querys[now.query_id].name+"#"+doc_name;
 	int w=doc_name2id[doc_name];
@@ -117,6 +118,9 @@ void addDoc(string doc_name,Session &now,int pos,int ifclick,double clicktime)
 		Doc d;
 		d.name=doc_name;
 		d.last_sess=d.last_pos=-1;
+		d.type=ty;
+		if(d.type>=MAXVERTICLE)
+            MAXVERTICLE=d.type+1;
 		docs.push_back(d);
 		doc_name2id[doc_name]=w;
 	}
@@ -179,8 +183,16 @@ void line_Data_20170903(const string &line)
 	now.ip=sess_info[4];
 
 	qryadd(res[1],now);
+	int ty;
+	//now.type=0;
 	for(int i=1;i<=DOCPERPAGE;++i)
-		addDoc(res[i*4-2],now,i,atoi(res[i*4-1].data()),atof(res[i*4].data()));
+	{
+		vector<string> e=split(res[i*4+1],'#');
+		if(e.size()>=2)
+			ty=v_type[stoi(e[1])];
+		addDoc(res[i*4-2],now,i,atoi(res[i*4-1].data()),atof(res[i*4].data()),ty);
+		//now.type+=doc[now.doc_id[i]].type;
+	}
 	
 	++doc_per_page[res.size()>>2];
 	if(now.click_cnt>=MINCLICK)
@@ -196,12 +208,12 @@ void line_Data_20170903(const string &line)
 	sessions.push_back(now);
 	//exit(0);
 }
-void read_Data_20170903()
+void read_Data_20170903(string w)
 {
 	int i,cnt=0,len;
 	fstream infile;
 	string line;
-	string file_prefix=data_dir,file_name;
+	string file_prefix=w.substr(0,w.size()-5),file_name;
 	for(i=0;i<MAXFILECNT;++i)
 	{
 		sprintf(tmp,"%05d",i);
@@ -220,5 +232,44 @@ void read_Data_20170903()
 		cout<<"Read "<<cnt<<" Lines\n";
 		infile.close();
 	}
+}
+void v_line(const string &w)
+{
+	vector<string> ww;
+	ww=split(w,'\t');
+	if(ww.size()<2)
+		return;
+	int ty=stoi(ww[1]),num=0;
+	for(auto c:ww[0])
+	{
+		if('0'<=c&&c<='9')
+		{
+			num=num*10+c-'0';
+		}
+		else
+		{
+			v_type[num]=ty;
+			num=0;
+		}
+	}
+	if(num)
+		v_type[num]=ty;
+}
+void load_vertical_type(string file_name)
+{
+	fstream infile;
+	infile.open(file_name.data(),ios::in);
+	if(!infile)
+		return;
+	int cnt=0;
+	cout<<"Open file : "<<file_name.data()<<endl;
+	while(infile)
+	{
+		infile.getline(tmp,MAXLINELEN);
+		v_line(tmp);
+		++cnt;
+	}
+
+	cout<<"v type : "<<cnt<<endl;
 }
 #endif

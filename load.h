@@ -111,8 +111,28 @@ bool read_clc_file(string file_name,int type=0)
 	infile.close();
 	return true;
 }
+bool read_clc_files(string file_name,int type=0)
+{
+	if(file_name.size()<6)
+		return read_clc_file(file_name,type);
+	for(int i=1;i<=5;++i)
+		if(file_name[file_name.size()-i]<'0'||file_name[file_name.size()-i]>'9')
+			return read_clc_file(file_name,type);
+	file_name=file_name.substr(0,file_name.size()-5);
+	string w;
+	int i;
+	for(i=0;i<MAXFILECNT;++i)
+	{
+		sprintf(tmp,"%05d",i);
+		w=file_name+tmp+".clc";
+		if(!read_clc_file(w,type))
+			break;
+	}
+	return i;
+}
 void div1to3()
 {
+	assert(0);
 	if(VALI==0)
 		return;
 	vector<Session> sess_tmp;
