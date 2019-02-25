@@ -7,12 +7,12 @@
 #define MAXDOCPERPAGE 13
 //Filter when load
 #define DOCPERPAGE MINDOCPERPAGE
-#define MINCLICK 0
-#define MAXCLICK 10
+#define MINCLICK 1
+#define MAXCLICK 8
 //Filter when load(by enable flag)
-#define MINSESSION 5
+#define MINSESSION 0
 //Filter when data filter (by enable flag)
-#define MAXSESSION 100000
+#define MAXSESSION 10000000
 //Filter when data filter (by enable flag)
 #define SAVEBLOCK 0
 //Querys per file (when dump)

@@ -207,7 +207,7 @@ void line_Data_20170903(const string &line)
 	}
 	
 	++doc_per_page[res.size()>>2];
-	if(now.click_cnt>=MINCLICK)
+	if(now.click_cnt>=MINCLICK&&now.click_cnt<=MAXCLICK)
 	{
 		++querys[now.query_id].sess_cnt;
 		now.enable=1;

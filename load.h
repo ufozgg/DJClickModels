@@ -76,16 +76,19 @@ bool line_Data_clc(const string &line,int type)
 	qryadd(res[0],now);
 	for(int i=1;i<=DOCPERPAGE;++i)
 		addDoc(doc_info[i-1],now,i,atoi(if_click[i-1].data()),atof(click_time_info[i-1].data()));
-	if(IFFILTER==0||now.click_cnt>=MINCLICK)
+	if(IFFILTER==0||(now.click_cnt>=MINCLICK&&now.click_cnt<=MAXCLICK))
 	{
 		++querys[now.query_id].sess_cnt;
 		now.enable=1;
 		now.kind=type;
-		sessions.push_back(now);
 		return 1;
 	}
-	now.enable=0;
-	++Filter[7];
+	else
+	{
+		now.enable=0;
+		++Filter[7];
+	}
+	sessions.push_back(now);
 	return 0;
 }
 bool read_clc_file(string file_name,int type=0)
@@ -148,11 +151,14 @@ bool line_Data_ucf(const string &line,int type)
 		++querys[now.query_id].sess_cnt;
 		now.enable=1;
 		now.kind=type;
-		sessions.push_back(now);
-		return 1;
 	}
-	now.enable=0;
-	++Filter[7];
+	else
+	{
+		now.enable=0;
+		++Filter[7];
+	}
+	sessions.push_back(now);
+	//return 1;
 	return 0;
 }
 bool read_ucf_file(string file_name,int type=0)
