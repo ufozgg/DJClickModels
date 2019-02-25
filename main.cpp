@@ -116,11 +116,12 @@ int main(int argc,char* argv[])
 	vector<string> mods=split(pa.get<std::string>("module"),',');
 	#ifdef ZRZ
 	int verticle_num[DOCPERPAGE+2]={0};
+	//int cnt_1=0,cnt_no_1=0;
     for(auto &sess:sessions)
     {
         sess.type=0;
         for(int i=1;i<=DOCPERPAGE;++i)
-            if(docs[sess.doc_id[i]].type)
+            if(docs[sess.doc_id[i]].type!=1)
                 ++sess.type;
         if(sess.enable&&sess.click_cnt)
             ++verticle_num[sess.type];

@@ -138,6 +138,7 @@ void addDoc(string doc_name,Session &now,int pos,int ifclick,double clicktime,in
 		now.click_time[pos]=0;
 }
 int maxx;
+int sp,sp2;
 void line_Data_20170903(const string &line)
 {
 	//cout<<line<<endl;
@@ -189,7 +190,17 @@ void line_Data_20170903(const string &line)
 	{
 		vector<string> e=split(res[i*4+1],'#');
 		if(e.size()>=2)
-			ty=v_type[stoi(e[1])];
+		{
+			sp+=(stoi(e[0])==-1);
+			sp2+=(stoi(e[0])!=-1);
+			if(v_type.count(stoi(e[0]))>0)
+				ty=v_type[stoi(e[0])];
+			else
+			{
+				ty=1;
+				//cerr<<e[0]<<endl;
+			}
+		}
 		addDoc(res[i*4-2],now,i,atoi(res[i*4-1].data()),atof(res[i*4].data()),ty);
 		//now.type+=doc[now.doc_id[i]].type;
 	}
@@ -232,6 +243,7 @@ void read_Data_20170903(string w)
 		cout<<"Read "<<cnt<<" Lines\n";
 		infile.close();
 	}
+	printf("D\t%d %d\n",sp,sp2);
 }
 void v_line(const string &w)
 {
@@ -269,7 +281,7 @@ void load_vertical_type(string file_name)
 		v_line(tmp);
 		++cnt;
 	}
-
+	v_type[-1]=1;
 	cout<<"v type : "<<cnt<<endl;
 }
 #endif
