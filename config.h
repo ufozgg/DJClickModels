@@ -1,6 +1,6 @@
 #ifndef CONFIG_H
 #define CONFIG_H
-#define MAXFILECNT 2
+#define MAXFILECNT 30
 #define MAXLINELEN 10010
 #define MINDOCPERPAGE 10
 //Filter when load

@@ -1,5 +1,6 @@
 #ifndef COMMON_H
 #define COMMON_H
+#include<cmath>
 #include<vector>
 #include<map>
 #include<unordered_map>

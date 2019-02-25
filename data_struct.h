@@ -101,6 +101,7 @@ void qryadd(string qry_w,Session &now)
 		Query q;
 		q.name=qry_w;
 		q.last=-1;
+		q.enable=true;
 		querys.push_back(q);
 		qry_name2id[qry_w]=w;
 	}

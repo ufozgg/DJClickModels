@@ -115,9 +115,11 @@ int main(int argc,char* argv[])
 	cerr<<"All docs num: "<<docs.size()<<endl;
 	vector<string> mods=split(pa.get<std::string>("module"),',');
 	#ifdef ZRZ
-	int verticle_num[20][DOCPERPAGE+2]={0};
+	int verticle_num[20][DOCPERPAGE+2];
+	memset(verticle_num,0,sizeof(verticle_num));
 	//int cnt_1=0,cnt_no_1=0;
 	int V,Vc;
+	cerr<<querys.size()<<endl;
 	for(auto &query:querys)
 		if(query.enable)
 		{
@@ -136,8 +138,12 @@ int main(int argc,char* argv[])
 					++Vc;
 				}
 			}
+			//cerr<<Vc;
 			if(Vc)
+			{
+				//cerr<<Vc<<" "<<V<<endl;
 				++verticle_num[min(10,(int)(log(Vc)/log(10)))][V/Vc];
+			}
 		}
     cout<<"Verticle number cnt"<<endl;
     string kind_name[4]={"None","Train","Test","Val"};
