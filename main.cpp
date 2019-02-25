@@ -115,24 +115,37 @@ int main(int argc,char* argv[])
 	cerr<<"All docs num: "<<docs.size()<<endl;
 	vector<string> mods=split(pa.get<std::string>("module"),',');
 	#ifdef ZRZ
-	int verticle_num[DOCPERPAGE+2]={0};
+	int verticle_num[20][DOCPERPAGE+2]={0};
 	//int cnt_1=0,cnt_no_1=0;
-    for(auto &sess:sessions)
-    {
-        sess.type=0;
-        for(int i=1;i<=DOCPERPAGE;++i)
-            if(docs[sess.doc_id[i]].type!=1)
-                ++sess.type;
-        if(sess.enable&&sess.click_cnt)
-            ++verticle_num[sess.type];
-    }
+	int V,Vc;
+	for(auto &query:querys)
+		if(query.enable)
+		{
+			Vc=V=0;
+			for(int i=query.last;i>0;i=sessions[i].query_nex)
+			{
+				Session &sess=sessions[i];
+				sess.type=0;
+				for(int i=1;i<=DOCPERPAGE;++i)
+					if(docs[sess.doc_id[i]].type!=1)
+						++sess.type;
+				sess.type;
+				if(sess.enable&&sess.click_cnt)
+				{
+					V+=sess.type;
+					++Vc;
+				}
+			}
+			if(Vc)
+				++verticle_num[min(10,(int)(log(Vc)/log(10)))][V/Vc];
+		}
     cout<<"Verticle number cnt"<<endl;
     string kind_name[4]={"None","Train","Test","Val"};
-//    for(int k=0;k<=3;++k)
+    for(int k=0;k<=10;++k)
     {
         //cout<<kind_name[k]<<" :\t";
         for(int i=0;i<=DOCPERPAGE;++i)
-            cout<<verticle_num[i]<<"\t";
+            cout<<verticle_num[k][i]<<"\t";
         cout<<endl;
     }
 	return 0;
