@@ -13,4 +13,6 @@ while w:
 plt.xlim(xmax=1100,xmin=1)
 plt.ylim(ymax=11,ymin=0)
 plt.semilogx(AA,BB,'ro',color='blue')
-plt.show()
+print('Input jpeg name:')
+file_name=str(input())+'.jpeg'
+plt.savefig(file_name)
