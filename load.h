@@ -80,15 +80,13 @@ bool line_Data_clc(const string &line,int type)
 	{
 		++querys[now.query_id].sess_cnt;
 		now.enable=1;
+		now.kind=type;
+		sessions.push_back(now);
+		return 1;
 	}
-	else
-	{
-		now.enable=0;
-		++Filter[7];
-	}
-	now.kind=type;
-	sessions.push_back(now);
-	return 1;
+	now.enable=0;
+	++Filter[7];
+	return 0;
 }
 bool read_clc_file(string file_name,int type=0)
 {
@@ -126,6 +124,73 @@ bool read_clc_files(string file_name,int type=0)
 		sprintf(tmp,"%05d",i);
 		w=file_name+tmp+".clc";
 		if(!read_clc_file(w,type))
+			break;
+	}
+	return i;
+}
+bool line_Data_ucf(const string &line,int type)
+{
+	static int cntt=0;
+	vector<string> res = split(line, '\t');
+	if(res.size()!=2+DOCPERPAGE*3)
+		return 0;
+	int cnt=0,v;
+	Session now;
+	int now_id=sessions.size();
+	now=Session();
+	now.id=now_id;
+	now.begin_time=atof(res[1].data());
+	qryadd(res[0],now);
+	for(int i=1;i<=DOCPERPAGE;++i)
+		addDoc(res[i*3-1],now,i,stof(res[i*3+1])>0,stof(res[i*3+1]),stoi(res[i*3]));
+	if(IFFILTER==0||(now.click_cnt>=MINCLICK&&now.click_cnt<=MAXCLICK))
+	{
+		++querys[now.query_id].sess_cnt;
+		now.enable=1;
+		now.kind=type;
+		sessions.push_back(now);
+		return 1;
+	}
+	now.enable=0;
+	++Filter[7];
+	return 0;
+}
+bool read_ucf_file(string file_name,int type=0)
+{
+	fstream infile;
+	infile.open(file_name.data(),ios::in);
+	if(!infile)
+	{
+		cout<<"Open file FAIL: "<<file_name.data()<<endl;
+		return false;
+	}
+	cout<<"Open file : "<<file_name.data()<<endl;
+	int cnt=0;
+	while(infile)
+	{
+		infile.getline(tmp,MAXLINELEN);
+		if(line_Data_ucf(tmp,type))
+			++cnt;
+	}
+	cout<<"Read "<<cnt<<" Lines\n";
+	infile.close();
+	return true;
+}
+bool read_ucf_files(string file_name,int type=0)
+{
+	if(file_name.size()<6)
+		return read_ucf_file(file_name,type);
+	for(int i=1;i<=5;++i)
+		if(file_name[file_name.size()-i]<'0'||file_name[file_name.size()-i]>'9')
+			return read_ucf_file(file_name,type);
+	file_name=file_name.substr(0,file_name.size()-5);
+	string w;
+	int i;
+	for(i=0;i<MAXFILECNT;++i)
+	{
+		sprintf(tmp,"%05d",i);
+		w=file_name+tmp+".ucf";
+		if(!read_ucf_file(w,type))
 			break;
 	}
 	return i;

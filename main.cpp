@@ -24,8 +24,8 @@ int main(int argc,char* argv[])
 	cmdline::parser pa;
 	assert(MINSESSION<=MAXSESSION);
 	pa.add<std::string>("module",'m',"module name such as \"ubm\"",false,"");
-	pa.add<std::string>("save",'s',"format: \"clc\"",false,"",cmdline::oneof<std::string>("clc","zrz"));
-	pa.add<std::string>("load",'l',"format: \"clc\" or \"zjq\" or \"default\"",false,"default",cmdline::oneof<std::string>("clc","zjq","default"));
+	pa.add<std::string>("save",'s',"format: \"clc\" or \"ucf\"",false,"",cmdline::oneof<std::string>("clc","ucf"));
+	pa.add<std::string>("load",'l',"format: \"clc\" or \"zjq\" or \"ucf\" or \"default\"",false,"default",cmdline::oneof<std::string>("clc","zjq","ucf","default"));
 	pa.add<std::string>("infiles",'i',"input files, none for no file, traindata,testdata,validata split by ','",false,"");
 	pa.add<std::string>("outdir",'o',"format: a dir",false,"");
 	pa.add<std::string>("filter",'f',"filter or not",false,"true");
@@ -79,6 +79,8 @@ int main(int argc,char* argv[])
 				load_data_zjq_181113(datas[i],i+1);
 			if(pa.get<std::string>("load")=="clc")
 				read_clc_files(datas[i],i+1);
+			if(pa.get<std::string>("load")=="ucf")
+				read_ucf_files(datas[i],i+1);
 			if(pa.get<std::string>("load")=="default")
 				read_Data_20170903(datas[i]);
 		}
@@ -98,6 +100,8 @@ int main(int argc,char* argv[])
 		vector<string> savekey=split(pa.get<std::string>("save"),',');
 		if(find(savekey.begin(),savekey.end(),"clc")!=savekey.end())
 			save_as_clc();
+		if(find(savekey.begin(),savekey.end(),"ucf")!=savekey.end())
+			save_as_ucf();
 	}
 	/*if(pa.get<std::string>("load")=="clcd"&&pa.get<std::string>("usetrained")=="true")
 		read_clc(pa.get<std::string>("load")=="clcd",false);*/
@@ -120,6 +124,7 @@ int main(int argc,char* argv[])
 	//int cnt_1=0,cnt_no_1=0;
 	int V,Vc;
 	cerr<<querys.size()<<endl;
+	vector<pair<int,double>> tmpp;
 	for(auto &query:querys)
 		if(query.enable)
 		{
@@ -142,9 +147,15 @@ int main(int argc,char* argv[])
 			if(Vc)
 			{
 				//cerr<<Vc<<" "<<V<<endl;
+				tmpp.push_back(make_pair(Vc,(double)V/Vc));
 				++verticle_num[min(10,(int)(log(Vc)/log(10)))][V/Vc];
 			}
 		}
+	sort(tmpp.begin(),tmpp.end());
+	FILE* tmp_f=fopen("../output/vertical_count","w");
+	for(auto i:tmpp)
+		fprintf(tmp_f,"%d %lf\n",i.first,i.second);
+	fclose(tmp_f);
     cout<<"Verticle number cnt"<<endl;
     string kind_name[4]={"None","Train","Test","Val"};
     for(int k=0;k<=10;++k)
@@ -154,6 +165,25 @@ int main(int argc,char* argv[])
             cout<<verticle_num[k][i]<<"\t";
         cout<<endl;
     }
+	cerr<<querys.size()<<endl;
+	tmpp.clear();
+	for(auto &query:querys)
+		if(query.enable)
+		{
+			Vc=V=0;
+			for(int i=query.last;i>0;i=sessions[i].query_nex)
+			{
+				Vc+=sessions[i].click_cnt;
+				++V;
+			}
+			if(V)
+				tmpp.push_back(make_pair(V,(double)Vc/V));
+		}
+	sort(tmpp.begin(),tmpp.end());
+	tmp_f=fopen("../output/click_count","w");
+	for(auto i:tmpp)
+		fprintf(tmp_f,"%d %lf\n",i.first,i.second);
+	fclose(tmp_f);
 	return 0;
 	#endif
 	if(find(mods.begin(),mods.end(),"baseline")!=mods.end())

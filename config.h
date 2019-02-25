@@ -1,6 +1,6 @@
 #ifndef CONFIG_H
 #define CONFIG_H
-#define MAXFILECNT 30
+#define MAXFILECNT 2
 #define MAXLINELEN 10010
 #define MINDOCPERPAGE 10
 //Filter when load
@@ -8,6 +8,7 @@
 //Filter when load
 #define DOCPERPAGE MINDOCPERPAGE
 #define MINCLICK 0
+#define MAXCLICK 10
 //Filter when load(by enable flag)
 #define MINSESSION 5
 //Filter when data filter (by enable flag)

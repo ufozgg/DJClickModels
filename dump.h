@@ -4,6 +4,54 @@ bool chk(int cnt,Session &sess)
 {
 	return IFDIV&&istest(sess,cnt);
 }
+void save_as_ucf()
+{
+	/*
+		UCF=ufozgg compress format
+		line = queryword[Tab][query_tim][Tab][user_name][docs*10]
+		docs = url[Tab]verticle_type[Tab]Click_tim
+	*/
+	int cnt=0,num=0;
+	sprintf(tmp,"%05d",num);
+	string file_name,file_name2;
+	FILE* sav,*sav2;
+	if(SAVEBLOCK)
+		file_name=save_file+tmp+".ucf";
+	else
+		file_name=save_file+".ucf";
+	cout<<"DUMP to "<<file_name<<endl;
+	sav=fopen(file_name.data(),"w");
+	for(auto &j:querys)
+	{
+		for(int w=j.last;w>=0;)
+		{
+			Session &i=sessions[w];
+			if(!i.enable)
+			{
+				w=i.query_nex;
+				continue;
+			}
+			++cnt;
+			fprintf(sav,"%s\t%.1lf\t",querys[i.query_id].name.data(),i.begin_time);
+			//fprintf(sav,"UFOZGG#%s#1#%.3lf#%s",users[i.user_id].name.data(),i.begin_time,i.ip.data());
+			//for(int j=1;j<=DOCPERPAGE;++j)
+			//	fprintf(chk(cnt,i)?sav2:sav,"%d%c",i.doc_id[j],j==DOCPERPAGE?'\t':' ');
+			for(int j=1;j<=DOCPERPAGE;++j)
+				fprintf(sav,"%s\t%d\t%.1lf%c",split(docs[i.doc_id[j]].name.data(),'#')[1].data(),docs[i.doc_id[j]].type,i.click_time[j],j==DOCPERPAGE?'\n':'\t');
+			if(SAVEBLOCK&&cnt==SAVEBLOCK)
+			{
+				cnt=0;
+				fclose(sav);
+				++num;
+				sprintf(tmp,"%05d",num);
+				file_name=save_file+tmp;
+				sav=fopen(file_name.data(),"w");
+			}
+			w=i.query_nex;
+		}
+	}
+	fclose(sav);
+}
 void save_as_clc()
 {
 	int cnt=0,num=0;
