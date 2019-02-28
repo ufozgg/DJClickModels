@@ -1,7 +1,7 @@
 /*************
 Auther: THUIR Ruizhe Zhang
 *************/
-#pragma GCC optimize("delete-null-pointer-checks,inline-functions-called-once,expensive-optimizations,optimize-sibling-calls,tree-switch-conversion,inline-small-functions,rerun-cse-after-loop,hoist-adjacent-loads,indirect-inlining,reorder-functions,no-stack-protector,partial-inlining,sched-interblock,cse-follow-jumps,align-functions,strict-aliasing,schedule-insns2,tree-tail-merge,inline-functions,schedule-insns,reorder-blocks,unroll-loops,thread-jumps,crossjumping,caller-saves,devirtualize,align-labels,align-loops,align-jumps,unroll-loops,sched-spec,inline,gcse,gcse-lm,ipa-sra,tree-pre,tree-vrp,peephole2,fastmath,Ofast,-Ofast")//,fastmath,Ofast,-Ofast
+#pragma GCC optimize("delete-null-pointer-checks,inline-functions-called-once,expensive-optimizations,optimize-sibling-calls,tree-switch-conversion,inline-small-functions,rerun-cse-after-loop,hoist-adjacent-loads,indirect-inlining,reorder-functions,no-stack-protector,partial-inlining,sched-interblock,cse-follow-jumps,align-functions,strict-aliasing,schedule-insns2,tree-tail-merge,inline-functions,schedule-insns,reorder-blocks,unroll-loops,thread-jumps,crossjumping,caller-saves,devirtualize,align-labels,align-loops,align-jumps,unroll-loops,sched-spec,inline,gcse,gcse-lm,ipa-sra,tree-pre,tree-vrp,peephole2")//,fastmath,Ofast,-Ofast
 #pragma GCC target("sse,sse2,sse3,ssse3,sse4,popcnt,abm,mmx,avx,tune=native")
 #include"cmdline.h"
 #include"data_struct.h"
