@@ -11,9 +11,10 @@ void line_data_zjq_181113(const string &line,int type)
 		cout<<line<<endl;
 	assert(res.size()==5);
 	Session now=Session();
+	if(!qryadd(res[0],now))
+		return;
 	int now_id=sessions.size();
 	now.id=now_id;
-	qryadd(res[0],now);
 	vector<string> doc = split(res[2],' ');
 	assert(doc.size()==10);
 	vector<string> clk = split(res[3],' ');
@@ -73,7 +74,8 @@ bool line_Data_clc(const string &line,int type)
 	now=Session();
 	now.id=now_id;
 	now.begin_time=atof(res[6].data());
-	qryadd(res[0],now);
+	if(!qryadd(res[0],now))
+		return 0;
 	for(int i=1;i<=DOCPERPAGE;++i)
 		addDoc(doc_info[i-1],now,i,atoi(if_click[i-1].data()),atof(click_time_info[i-1].data()));
 	if(IFFILTER==0||(now.click_cnt>=MINCLICK&&now.click_cnt<=MAXCLICK))
@@ -81,7 +83,6 @@ bool line_Data_clc(const string &line,int type)
 		++querys[now.query_id].sess_cnt;
 		now.enable=1;
 		now.kind=type;
-		return 1;
 	}
 	else
 	{
@@ -89,7 +90,7 @@ bool line_Data_clc(const string &line,int type)
 		++Filter[7];
 	}
 	sessions.push_back(now);
-	return 0;
+	return 1;
 }
 bool read_clc_file(string file_name,int type=0)
 {
@@ -143,7 +144,8 @@ bool line_Data_ucf(const string &line,int type)
 	now=Session();
 	now.id=now_id;
 	now.begin_time=atof(res[1].data());
-	qryadd(res[0],now);
+	if(!qryadd(res[0],now))
+		return 0;
 	for(int i=1;i<=DOCPERPAGE;++i)
 		addDoc(res[i*3-1],now,i,stof(res[i*3+1])>0,stof(res[i*3+1]),stoi(res[i*3]));
 	if(IFFILTER==0||(now.click_cnt>=MINCLICK&&now.click_cnt<=MAXCLICK))
@@ -158,8 +160,8 @@ bool line_Data_ucf(const string &line,int type)
 		++Filter[7];
 	}
 	sessions.push_back(now);
-	//return 1;
-	return 0;
+	return 1;
+	//return 0;
 }
 bool read_ucf_file(string file_name,int type=0)
 {

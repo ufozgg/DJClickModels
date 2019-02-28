@@ -70,8 +70,9 @@ unordered_map<string,int> user_name2id;
 unordered_map<string,int> qry_name2id;
 unordered_map<string,int> doc_name2id;
 unordered_map<string,int> feature_name2id;
+unordered_map<string,bool> query_list;
 void uidadd(string uid,Session &now);
-void qryadd(string qry_w,Session &now);
+bool qryadd(string qry_w,Session &now);
 void addDoc(string doc_name,Session &now,int pos,int ifclick,double clicktime,int ty);
 void line_Data_20170903(const string &line);
 void read_Data_20170903();
@@ -92,8 +93,10 @@ void uidadd(string uid,Session &now)
 	now.user_nex=users[w].last;
 	users[w].last=now.id;
 }
-void qryadd(string qry_w,Session &now)
+bool qryadd(string qry_w,Session &now)
 {
+	if(query_list.size()>0&&query_list[qry_w]==false)
+		return false;
 	int w=qry_name2id[qry_w];
 	if(w==0)
 	{
@@ -108,6 +111,7 @@ void qryadd(string qry_w,Session &now)
 	now.query_id=w;
 	now.query_nex=querys[w].last;
 	querys[w].last=now.id;
+	return true;
 }
 void addDoc(string doc_name,Session &now,int pos,int ifclick,double clicktime,int ty=0)
 {
@@ -179,12 +183,13 @@ void line_Data_20170903(const string &line)
 		return;
 	}
 	now=Session();
+	if(!qryadd(res[1],now))
+		return;
 	now.id=sessions.size();
 	uidadd(sess_info[1],now);
 	now.begin_time=atof(sess_info[3].data());
 	now.ip=sess_info[4];
 
-	qryadd(res[1],now);
 	int ty;
 	//now.type=0;
 	for(int i=1;i<=DOCPERPAGE;++i)
@@ -226,9 +231,10 @@ void read_Data_20170903(string w)
 	fstream infile;
 	string line;
 	string file_prefix=w.substr(0,w.size()-5),file_name;
+	int st=stoi(w.substr(w.size()-5,5));
 	for(i=0;i<MAXFILECNT;++i)
 	{
-		sprintf(tmp,"%05d",i);
+		sprintf(tmp,"%05d",i+st);
 		file_name=file_prefix+tmp;
 		infile.open(file_name.data(),ios::in);
 		if(!infile)
