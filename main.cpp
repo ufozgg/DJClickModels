@@ -18,6 +18,7 @@ Auther: THUIR Ruizhe Zhang
 #include"mcm.h"
 #include"ubmlayout.h"
 #include"load_feature.h"
+#include"load_query_list.h"
 using namespace std;
 int main(int argc,char* argv[])
 {
@@ -29,6 +30,7 @@ int main(int argc,char* argv[])
 	pa.add<std::string>("infiles",'i',"input files, none for no file, traindata,testdata,validata split by ','",false,"");
 	pa.add<std::string>("outdir",'o',"format: a dir",false,"");
 	pa.add<std::string>("filter",'f',"filter or not",false,"true");
+	pa.add<std::string>("querylist",'q',"query list",false,"false");
 	pa.add<std::string>("sample",'S',"sample or not",false,"false");
 	pa.add<std::string>("feature",'F',"load feature or not",false,"false");
 	pa.add<std::string>("vertical",'V',"Vertical_type_file_name",false,"false");
@@ -72,6 +74,11 @@ int main(int argc,char* argv[])
 	}
 	while(datas.size()<3)
 		datas.push_back("none");
+	if(pa.get<std::string>("querylist")!="false")
+	{
+		load_query_list(pa.get<std::string>("querylist"));
+		//cerr<<"!!!!!!!!!!!!!!"<<query_list.size();
+	}
 	for(int i=0;i<3;++i)
 		if(datas[i]!="none")
 		{
