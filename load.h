@@ -11,10 +11,10 @@ void line_data_zjq_181113(const string &line,int type)
 		cout<<line<<endl;
 	assert(res.size()==5);
 	Session now=Session();
-	if(!qryadd(res[0],now))
-		return;
 	int now_id=sessions.size();
 	now.id=now_id;
+	if(!qryadd(res[0],now))
+		return;
 	vector<string> doc = split(res[2],' ');
 	assert(doc.size()==10);
 	vector<string> clk = split(res[3],' ');

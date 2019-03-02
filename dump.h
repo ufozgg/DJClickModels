@@ -23,7 +23,7 @@ void save_as_ucf()
 	sav=fopen(file_name.data(),"w");
 	for(auto &j:querys)
 	{
-		for(int w=j.last;w>=0;)
+		for(int w=j.last;w>0;)
 		{
 			Session &i=sessions[w];
 			if(!i.enable)

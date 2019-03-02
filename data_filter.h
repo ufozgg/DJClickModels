@@ -37,7 +37,7 @@ void Data_Filter()
 	for(auto &j:querys)
 		if(j.sess_cnt>=MINSESSION&&j.sess_cnt<=MAXSESSION)
 		{
-			for(int w=j.last;w>=0;)
+			for(int w=j.last;w>0;)
 			{
 				Session &i=sessions[w];
 				if(!i.enable)

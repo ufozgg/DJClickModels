@@ -183,6 +183,7 @@ void line_Data_20170903(const string &line)
 		return;
 	}
 	now=Session();
+	now.id=now_id;
 	if(!qryadd(res[1],now))
 		return;
 	now.id=sessions.size();
