@@ -208,6 +208,8 @@ void line_Data_20170903(const string &line)
 				//cerr<<e[0]<<endl;
 			}
 		}
+		else
+			ty=19;//UNKNOW
 		addDoc(res[i*4-2],now,i,atoi(res[i*4-1].data()),atof(res[i*4].data()),ty);
 		//now.type+=doc[now.doc_id[i]].type;
 	}

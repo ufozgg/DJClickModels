@@ -150,13 +150,7 @@ bool line_Data_ucf(const string &line,int type)
 	if(!qryadd(res[0],now))
 		return 0;
 	for(int i=1;i<=DOCPERPAGE;++i)
-		if(stoi(res[i*3])>MAXVERTICLE)
-		{
-			cerr<<MAXVERTICLE<<endl;
-			MAXVERTICLE=stoi(res[i*3]);
-		}
-	return 0;
-		//addDoc(res[i*3-1],now,i,stof(res[i*3+1])>0,stof(res[i*3+1]),stoi(res[i*3]));
+		addDoc(res[i*3-1],now,i,stof(res[i*3+1])>0,stof(res[i*3+1]),stoi(res[i*3]));
 	if(IFFILTER==0||(now.click_cnt>=MINCLICK&&now.click_cnt<=MAXCLICK))
 	{
 		++querys[now.query_id].sess_cnt;
