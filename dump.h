@@ -4,7 +4,7 @@ bool chk(int cnt,Session &sess)
 {
 	return IFDIV&&istest(sess,cnt);
 }
-void save_as_ucf()
+void save_as_ucf(string name,int kind=0)
 {
 	/*
 		UCF=ufozgg compress format
@@ -16,9 +16,9 @@ void save_as_ucf()
 	string file_name,file_name2;
 	FILE* sav,*sav2;
 	if(SAVEBLOCK)
-		file_name=save_file+tmp+".ucf";
+		file_name=name+tmp+".ucf";
 	else
-		file_name=save_file+".ucf";
+		file_name=name+".ucf";
 	cout<<"DUMP to "<<file_name<<endl;
 	sav=fopen(file_name.data(),"w");
 	for(auto &j:querys)
@@ -26,7 +26,7 @@ void save_as_ucf()
 		for(int w=j.last;w>0;)
 		{
 			Session &i=sessions[w];
-			if(!i.enable)
+			if((!i.enable)||(kind!=0&&kind!=i.kind))
 			{
 				w=i.query_nex;
 				continue;
@@ -60,6 +60,7 @@ void save_as_clc()
 	FILE* sav,*sav2;
 	if(IFDIV)
 	{
+		assert(0);//DON'T THIS DIV UNLESS YOU KNOW HOW IT WORKS
 		file_name=save_file+tmp+"_train.clc";
 		cout<<"DUMP to "<<file_name<<endl;
 		sav=fopen(file_name.data(),"w");

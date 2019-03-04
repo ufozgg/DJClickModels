@@ -7,6 +7,7 @@ int doc_per_page[MAXDOCPERPAGE+1];
 int qFilter[10];
 int Filter[10];
 unordered_map<int,int> v_type;
+vector<double> tim_div;
 class Doc
 {
     public:
@@ -195,12 +196,15 @@ void line_Data_20170903(const string &line)
 		return;
 	}
 	now=Session();
+	now.begin_time=atof(sess_info[3].data());
 	now.id=now_id;
+	if(now.begin_time<1000000000||now.begin_time>1800000000)
+		return;
 	if(!qryadd(res[1],now))
 		return;
 	now.id=sessions.size();
 	uidadd(sess_info[1],now);
-	now.begin_time=atof(sess_info[3].data());
+	tim_div.push_back(now.begin_time);
 	now.ip=sess_info[4];
 
 	int ty;
@@ -305,5 +309,49 @@ void load_vertical_type(string file_name)
 	}
 	v_type[-1]=1;
 	cout<<"v type : "<<cnt<<endl;
+}
+vector<pain<double,int>> div_vec;
+void divide(double div_time,int sess_lim=1000000000)
+{
+	if(div_time<0.1)
+	{
+		assert(0);//ARGS ERROR
+		return;
+	}
+	int a,b,A,B;
+	A=B=0;
+	double C;
+	for(int i=0;i<querys.size();++i)
+	{
+		a=b=0;
+		for(int j=querys[i].last;j>0;)
+		{
+			Session &sess=sessions[j];
+			if(sess.enable==0)
+			{
+				j=sess.query_nex;
+				continue;
+			}
+			if(sess.begin_time<div_time)
+				++a;
+			else
+				++b;
+			j=sess.query_nex;
+		}
+		if(a&&b)
+		{
+			A+=a;
+			B+=b;
+			div_vec.push_back(make_pair(1.0*a/(a+b),i));
+		}
+	}
+	C=A/(A+B);
+	for(auto &x:div_vec)
+	{
+		x.first=max((x.first-C)/(1.0-C),(C-x.first)/C);
+	}
+	sort(div_vec.begin(),div_vec.end());
+	int flag=0;//give kind
+	
 }
 #endif

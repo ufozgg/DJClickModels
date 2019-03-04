@@ -74,6 +74,9 @@ bool line_Data_clc(const string &line,int type)
 	now=Session();
 	now.id=now_id;
 	now.begin_time=atof(res[6].data());
+	if(now.begin_time<1000000000||now.begin_time>1800000000)
+		return 0;
+	tim_div.push_back(now.begin_time);
 	if(!qryadd(res[0],now))
 		return 0;
 	for(int i=1;i<=DOCPERPAGE;++i)
@@ -144,8 +147,11 @@ bool line_Data_ucf(const string &line,int type)
 	now=Session();
 	now.id=now_id;
 	now.begin_time=atof(res[1].data());
+	if(now.begin_time<1000000000||now.begin_time>1800000000)
+		return 0;
+	tim_div.push_back(now.begin_time);
 	++cntt;
-	if(cntt%100000==0)
+	if(cntt%1000000==0)
 		cerr<<cntt<<endl;
 	if(!qryadd(res[0],now))
 		return 0;

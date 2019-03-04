@@ -1,5 +1,6 @@
 /*************
 Auther: THUIR Ruizhe Zhang
+Don't use after 2027A.D.
 *************/
 #pragma GCC optimize("delete-null-pointer-checks,inline-functions-called-once,expensive-optimizations,optimize-sibling-calls,tree-switch-conversion,inline-small-functions,rerun-cse-after-loop,hoist-adjacent-loads,indirect-inlining,reorder-functions,no-stack-protector,partial-inlining,sched-interblock,cse-follow-jumps,align-functions,strict-aliasing,schedule-insns2,tree-tail-merge,inline-functions,schedule-insns,reorder-blocks,unroll-loops,thread-jumps,crossjumping,caller-saves,devirtualize,align-labels,align-loops,align-jumps,unroll-loops,sched-spec,inline,gcse,gcse-lm,ipa-sra,tree-pre,tree-vrp,peephole2")//,fastmath,Ofast,-Ofast
 #pragma GCC target("sse,sse2,sse3,ssse3,sse4,popcnt,abm,mmx,avx,tune=native")
@@ -35,7 +36,10 @@ int main(int argc,char* argv[])
 	pa.add<std::string>("feature",'F',"load feature or not",false,"false");
 	pa.add<std::string>("vertical",'V',"Vertical_type_file_name",false,"false");
 	pa.add<std::string>("typetest",'t',"test by type",false,"false");
+	pa.add<std::string>("timediv",'T',"get time div by 5%",false,"false");
 	pa.add<std::string>("round",'r',"round for models",false,"100");
+	pa.add<std::string>("sessioncount",'c',"when filter good sessions",false,"1000000000");
+	pa.add<std::string>("divide",'d',"divide",false,"0.0");
 	pa.add<std::string>("usetrained",'u',"if true ,not train ,load args from file",false,"false");
 	//pa.add<std::string>("data",'d',"load data from,default from ../data/part-r-xxxxx",false,"",cmdline::oneof<std::string>("ubm"));
 	pa.parse_check(argc,argv);
@@ -79,9 +83,11 @@ int main(int argc,char* argv[])
 		load_query_list(pa.get<std::string>("querylist"));
 		//cerr<<"!!!!!!!!!!!!!!"<<query_list.size();
 	}
+	int data_cnt=0;
 	for(int i=0;i<3;++i)
 		if(datas[i]!="none")
 		{
+			++data_cnt;
 			if(pa.get<std::string>("load")=="zjq")
 				load_data_zjq_181113(datas[i],i+1);
 			if(pa.get<std::string>("load")=="clc")
@@ -91,6 +97,20 @@ int main(int argc,char* argv[])
 			if(pa.get<std::string>("load")=="default")
 				read_Data_20170903(datas[i]);
 		}
+	sort(tim_div.begin(),tim_div.end());
+	if(pa.get<std::string>("timediv")=="true")
+	{
+		for(int i=0;i<=20;++i)
+			cerr<<5*i<<"% time is "<<setiosflags(ios::fixed)<<tim_div[max((int)tim_div.size()*i/20-1,0)]<<endl;
+		for(int i=0;i<=20;++i)
+			cerr<<setiosflags(ios::fixed)<<tim_div[max((int)tim_div.size()*i/20-1,0)]<<",";
+		cerr<<endl;
+	}
+	double divide_time=(stof(pa.get<std::string>("divide"));
+	if(divide_time>0.01&&divide_time<0.99)
+		divide_time=tim_div[max((int)(tim_div.size()*divide_time-1),0)];
+	if(divide_time>0.1)
+		divide(divide_time,stoi(pa.get<std::string>("sessioncount")));
 	if(pa.get<std::string>("feature")!="false")
 	{
 		load_zjq_feature(pa.get<std::string>("feature"));
@@ -106,9 +126,20 @@ int main(int argc,char* argv[])
 			Data_Filter();
 		vector<string> savekey=split(pa.get<std::string>("save"),',');
 		if(find(savekey.begin(),savekey.end(),"clc")!=savekey.end())
-			save_as_clc();
+		{
+			save_as_clc();//TODIV
+		}
 		if(find(savekey.begin(),savekey.end(),"ucf")!=savekey.end())
-			save_as_ucf();
+		{
+			if(divide_time<0.1)
+				save_as_ucf(pa.get<std::string>("outdir"));
+			else
+			{
+				save_as_ucf(pa.get<std::string>("outdir")+"_train",1);
+				save_as_ucf(pa.get<std::string>("outdir")+"_val",3);
+				save_as_ucf(pa.get<std::string>("outdir")+"_test",2);
+			}
+		}
 	}
 	/*if(pa.get<std::string>("load")=="clcd"&&pa.get<std::string>("usetrained")=="true")
 		read_clc(pa.get<std::string>("load")=="clcd",false);*/
