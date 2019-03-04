@@ -95,6 +95,18 @@ void uidadd(string uid,Session &now)
 }
 bool qryadd(string qry_w,Session &now)
 {
+	/*static int cntt=0;
+	static string name="";
+	if(name!=qry_w)
+	{
+		if(cntt)
+			cout<<cntt<<"\t"<<name<<endl;
+		cntt=1;
+		name=qry_w;
+	}
+	else
+		++cntt;
+	return false;*/
 	if(query_list.size()>0&&query_list[qry_w]==false)
 		return false;
 	int w=qry_name2id[qry_w];

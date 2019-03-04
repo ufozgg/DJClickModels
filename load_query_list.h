@@ -5,6 +5,8 @@ int line_query_list(const string &line)
     if(line.size()<1)
         return -1;
     vector<string> res=split(line,' ');
+    if(res.size()!=2)
+	res=split(line,'\t');
     assert(res.size()==2);
     query_list[res[1]]=true;
     return 1;

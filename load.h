@@ -183,6 +183,8 @@ bool read_ucf_file(string file_name,int type=0)
 		if(line_Data_ucf(tmp,type))
 			++cnt;
 	}
+	//Session x=Session();
+	//qryadd("X!",x);
 	cout<<"Read "<<cnt<<" Lines\n";
 	infile.close();
 	return true;
