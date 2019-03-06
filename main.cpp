@@ -106,11 +106,14 @@ int main(int argc,char* argv[])
 			cerr<<setiosflags(ios::fixed)<<tim_div[max((int)tim_div.size()*i/20-1,0)]<<",";
 		cerr<<endl;
 	}
-	double divide_time=(stof(pa.get<std::string>("divide"));
+	cerr<<"***************\n";
+	double divide_time=stof(pa.get<std::string>("divide"));
+	cerr<<pa.get<std::string>("divide")<<"AAAA"<<divide_time<<endl;
 	if(divide_time>0.01&&divide_time<0.99)
 		divide_time=tim_div[max((int)(tim_div.size()*divide_time-1),0)];
 	if(divide_time>0.1)
 		divide(divide_time,stoi(pa.get<std::string>("sessioncount")));
+	cerr<<"##########################\n";
 	if(pa.get<std::string>("feature")!="false")
 	{
 		load_zjq_feature(pa.get<std::string>("feature"));
@@ -122,7 +125,7 @@ int main(int argc,char* argv[])
 		if(pa.get<std::string>("load")=="clcd"||pa.get<std::string>("load")=="clc")
 			read_clc(pa.get<std::string>("load")=="clcd");*/
 		//return 0;
-		if(pa.get<std::string>("filter")=="true")
+		if(divide_time<1&&pa.get<std::string>("filter")=="true")
 			Data_Filter();
 		vector<string> savekey=split(pa.get<std::string>("save"),',');
 		if(find(savekey.begin(),savekey.end(),"clc")!=savekey.end())
@@ -290,7 +293,7 @@ int main(int argc,char* argv[])
 			ubm_mod.train();
 		else
 			ubm_mod.load();
-		
+		cerr<<"UUU"<<endl;
 		if(pa.get<std::string>("sample")=="testdata")
 		{
 			ubm_mod.sample_testdata();//TODO: xxx
@@ -299,6 +302,7 @@ int main(int argc,char* argv[])
 		{
 			ubm_mod.test();
 		}
+		cerr<<"VVV"<<endl;
 		if(pa.get<std::string>("typetest")=="true")
 		{
 			cout<<"Type test ubm:\n";

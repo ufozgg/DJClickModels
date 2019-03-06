@@ -11,7 +11,7 @@ void save_as_ucf(string name,int kind=0)
 		line = queryword[Tab][query_tim][Tab][user_name][docs*10]
 		docs = url[Tab]verticle_type[Tab]Click_tim
 	*/
-	int cnt=0,num=0;
+	int Qc=0,cnt=0,num=0;
 	sprintf(tmp,"%05d",num);
 	string file_name,file_name2;
 	FILE* sav,*sav2;
@@ -21,9 +21,11 @@ void save_as_ucf(string name,int kind=0)
 		file_name=name+".ucf";
 	cout<<"DUMP to "<<file_name<<endl;
 	sav=fopen(file_name.data(),"w");
-	for(auto &j:querys)
+	for(int j=0;j<querys.size();++j)
+	if(querys[j].enable)
 	{
-		for(int w=j.last;w>0;)
+		++Qc;
+		for(int w=querys[j].last;w>0;)
 		{
 			Session &i=sessions[w];
 			if((!i.enable)||(kind!=0&&kind!=i.kind))
@@ -50,6 +52,7 @@ void save_as_ucf(string name,int kind=0)
 			w=i.query_nex;
 		}
 	}
+	cerr<<cnt<<"\t"<<Qc<<endl;
 	fclose(sav);
 }
 void save_as_clc()
