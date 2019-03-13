@@ -1,7 +1,7 @@
-#ifndef MCM_H
-#define MCM_H
+#ifndef MCM2_H
+#define MCM2_H
 //#define double long double
-class mcm:public model
+class mcm2:public model
 {
     public:
         double forward[DOCPERPAGE+2][2],backward[DOCPERPAGE+2][2];
@@ -11,14 +11,14 @@ class mcm:public model
         vector<double> alpha,beta,s_c,s_e;
         void train_init()
         {
-            name="Mcm";
+            name="Mcm2";
             doc_rel=vector<double>(docs.size()+1);
             alpha=vector<double>(docs.size()+1);
             alpha1=vector<double>(docs.size()+1);
             alpha0=vector<double>(docs.size()+1);
-            beta=vector<double>(MAXVERTICLE+1);
-            beta1=vector<double>(MAXVERTICLE+1);
-            beta0=vector<double>(MAXVERTICLE+1);
+            beta=vector<double>(docs.size()+1);
+            beta1=vector<double>(docs.size()+1);
+            beta0=vector<double>(docs.size()+1);
             s_e=vector<double>(docs.size()+1);
             s_e1=vector<double>(docs.size()+1);
             s_e0=vector<double>(docs.size()+1);
@@ -32,7 +32,7 @@ class mcm:public model
             {
                 alpha[i]=s_c[i]=s_e[i]=0.5;
             }
-            for(int i=0;i<=MAXVERTICLE;++i)
+            for(int i=0;i<docs.size();++i)
                 beta[i]=0.5;
             //train_clear();
         }
@@ -48,8 +48,11 @@ class mcm:public model
                 s_e1[i]=.5;
                 s_e0[i]=1;
             }
-            for(int i=0;i<=MAXVERTICLE;++i)
-                beta0[i]=beta1[i]=1;
+            for(int i=0;i<=docs.size();++i)
+            {
+                beta0[i]=0.1;
+                beta1[i]=0.0001;
+            }
             for(int i=0;i<=DOCPERPAGE;++i)
                 for(int j=0;j<=DOCPERPAGE;++j)
                     gamma1[i][j]=gamma0[i][j]=.0001;
@@ -95,50 +98,50 @@ class mcm:public model
                         {
                             alpha1[id]+=1;
                             //alpha0[id]+=;
-                            beta1[vid]+=1;
-                            //beta0[vid]+=1;
+                            beta1[id]+=1;
+                            //beta0[id]+=1;
                             gamma1[i][i-last_clk]+=1;
                             //gamma0[i][i-last_clk]+=;
-                            //s_c1[id]+=forward[i-1][0]*gamma[i][i-last_clk]*alpha[id]*beta[vid]*backward[i][1];要转成条件概率计算
-                            s_c1[id]+=forward[i-1][0]*gamma[i][i-last_clk]*alpha[id]*beta[vid]*s_c[id]*backward[i][1]/prob_cs;
-                            s_c0[id]+=forward[i-1][0]*gamma[i][i-last_clk]*alpha[id]*beta[vid]*(1.-s_c[id])*backward[i][0]/prob_cs;
-                            //s_e1[id]+=forward[i-1][0]*gamma[i][i-last_clk]*alpha[id]*beta[vid]*s_e[id]*backward[i][0]/prob_cs;
-                            //s_e0[id]+=forward[i-1][0]*gamma[i][i-last_clk]*alpha[id]*beta[vid]*(1.-s_e[id])*backward[i][0]/prob_cs;
+                            //s_c1[id]+=forward[i-1][0]*gamma[i][i-last_clk]*alpha[id]*beta[id]*backward[i][1];要转成条件概率计算
+                            s_c1[id]+=forward[i-1][0]*gamma[i][i-last_clk]*alpha[id]*beta[id]*s_c[id]*backward[i][1]/prob_cs;
+                            s_c0[id]+=forward[i-1][0]*gamma[i][i-last_clk]*alpha[id]*beta[id]*(1.-s_c[id])*backward[i][0]/prob_cs;
+                            //s_e1[id]+=forward[i-1][0]*gamma[i][i-last_clk]*alpha[id]*beta[id]*s_e[id]*backward[i][0]/prob_cs;
+                            //s_e0[id]+=forward[i-1][0]*gamma[i][i-last_clk]*alpha[id]*beta[id]*(1.-s_e[id])*backward[i][0]/prob_cs;
                             last_clk=i;
                         }
                         else
                         {
                             alpha1[id]+=(forward[i-1][0]*alpha[id]*backward[i][0]*(1.-gamma[i][i-last_clk])\
                                 +forward[i-1][1]*backward[i][1]*alpha[id]+forward[i-1][0]*gamma[i][i-last_clk]*alpha[id]*\
-                                (1.-beta[vid])*(s_e[id]*backward[i][1]+(1.-s_e[id])*backward[i][0]))/prob_cs;
+                                (1.-beta[id])*(s_e[id]*backward[i][1]+(1.-s_e[id])*backward[i][0]))/prob_cs;
                             alpha0[id]+=(forward[i-1][0]*(1.-alpha[id])*backward[i][0]+\
                                 forward[i-1][1]*backward[i][1]*(1.-alpha[id]))/prob_cs;
-                            beta1[vid]+=beta[vid]*(forward[i-1][0]*backward[i][0]*(1.-alpha[id]*gamma[i][i-last_clk])+forward[i-1][1]*backward[i][1])/prob_cs;
-                            beta0[vid]+=((1.-beta[vid])*(forward[i-1][0]*backward[i][0]*(1.-alpha[id]*gamma[i][i-last_clk])+forward[i-1][1]*backward[i][1])+\
-                                forward[i-1][0]*gamma[i][i-last_clk]*alpha[id]*(1.-beta[vid])*(s_e[id]*backward[i][1]+(1.-s_e[id])*backward[i][0]))/prob_cs;
-                            //beta0[vid]+=1.-beta[vid]*(forward[i-1][0]*backward[i][0]*(1.-alpha[id]*gamma[i][i-last_clk])+forward[i-1][1]*backward[i][1])/prob_cs;
-                            gamma1[i][i-last_clk]+=(forward[i-1][0]*backward[i][0]*gamma[i][i-last_clk]*(1.-alpha[id]+alpha[id]*(1.-beta[vid])*(1.-s_e[id]))+\
-                                forward[i-1][0]*backward[i][1]*gamma[i][i-last_clk]*alpha[id]*(1.-beta[vid])*s_e[id])/prob_cs;
+                            beta1[id]+=beta[id]*(forward[i-1][0]*backward[i][0]*(1.-alpha[id]*gamma[i][i-last_clk])+forward[i-1][1]*backward[i][1])/prob_cs;
+                            beta0[id]+=((1.-beta[id])*(forward[i-1][0]*backward[i][0]*(1.-alpha[id]*gamma[i][i-last_clk])+forward[i-1][1]*backward[i][1])+\
+                                forward[i-1][0]*gamma[i][i-last_clk]*alpha[id]*(1.-beta[id])*(s_e[id]*backward[i][1]+(1.-s_e[id])*backward[i][0]))/prob_cs;
+                            //beta0[id]+=1.-beta[id]*(forward[i-1][0]*backward[i][0]*(1.-alpha[id]*gamma[i][i-last_clk])+forward[i-1][1]*backward[i][1])/prob_cs;
+                            gamma1[i][i-last_clk]+=(forward[i-1][0]*backward[i][0]*gamma[i][i-last_clk]*(1.-alpha[id]+alpha[id]*(1.-beta[id])*(1.-s_e[id]))+\
+                                forward[i-1][0]*backward[i][1]*gamma[i][i-last_clk]*alpha[id]*(1.-beta[id])*s_e[id])/prob_cs;
                             gamma0[i][i-last_clk]+=(forward[i-1][0]*backward[i][0]*(1.-gamma[i][i-last_clk]))/prob_cs;
                             /*double w=0;
-                            w+=(forward[i-1][0]*backward[i][0]*gamma[i][i-last_clk]*(1.-alpha[id]+alpha[id]*(1.-beta[vid])*(1.-s_e[id]))+\
-                                forward[i-1][0]*backward[i][1]*gamma[i][i-last_clk]*alpha[id]*(1.-beta[vid])*s_e[id])/prob_cs;
+                            w+=(forward[i-1][0]*backward[i][0]*gamma[i][i-last_clk]*(1.-alpha[id]+alpha[id]*(1.-beta[id])*(1.-s_e[id]))+\
+                                forward[i-1][0]*backward[i][1]*gamma[i][i-last_clk]*alpha[id]*(1.-beta[id])*s_e[id])/prob_cs;
                             w+=(forward[i-1][0]*backward[i][0]*(1.-gamma[i][i-last_clk]))/prob_cs;
                             w-=forward[i-1][0]*backward[i-1][0]/prob_cs;
                             if(w>1e-7||w<-1e-7)
                             {
                                 cerr<<forward[i-1][0]<<"\t"<<backward[i][0]<<"\t"<<forward[i-1][1]<<"\t"<<backward[i][1]<<"\t"<<prob_cs<<"\t"<<forward[i-1][0]*backward[i-1][0]<<endl;
-                                cerr<<gamma[i][i-last_clk]<<"\t"<<alpha[id]<<"\t"<<s_e[id]<<"\t"<<beta[vid]<<endl;
-                                cerr<<(forward[i-1][0]*backward[i][0]*gamma[i][i-last_clk]*(1.-alpha[id]+alpha[id]*(1.-beta[vid])*(1.-s_e[id]))+\
-                                forward[i-1][0]*backward[i][1]*gamma[i][i-last_clk]*alpha[id]*(1.-beta[vid])*s_e[id])/prob_cs<<endl;
+                                cerr<<gamma[i][i-last_clk]<<"\t"<<alpha[id]<<"\t"<<s_e[id]<<"\t"<<beta[id]<<endl;
+                                cerr<<(forward[i-1][0]*backward[i][0]*gamma[i][i-last_clk]*(1.-alpha[id]+alpha[id]*(1.-beta[id])*(1.-s_e[id]))+\
+                                forward[i-1][0]*backward[i][1]*gamma[i][i-last_clk]*alpha[id]*(1.-beta[id])*s_e[id])/prob_cs<<endl;
                                 cerr<<(forward[i-1][0]*backward[i][0]*(1.-gamma[i][i-last_clk]))/prob_cs<<endl;
                                 assert(w<1e-4&&-1e-4<w);
                             }
                             */
                             //s_c1[id]+=;
                             //s_c0[id]+=;
-                            s_e1[id]+=(forward[i-1][0]*gamma[i][i-last_clk]*alpha[id]*(1.-beta[vid])*s_e[id]*backward[i][1])/prob_cs;
-                            s_e0[id]+=(forward[i-1][0]*gamma[i][i-last_clk]*alpha[id]*(1.-beta[vid])*(1.-s_e[id])*backward[i][0])/prob_cs;
+                            s_e1[id]+=(forward[i-1][0]*gamma[i][i-last_clk]*alpha[id]*(1.-beta[id])*s_e[id]*backward[i][1])/prob_cs;
+                            s_e0[id]+=(forward[i-1][0]*gamma[i][i-last_clk]*alpha[id]*(1.-beta[id])*(1.-s_e[id])*backward[i][0])/prob_cs;
                         }
                     }
                 }
@@ -150,7 +153,7 @@ class mcm:public model
                     //cerr<<alpha[i]<<"\t"<<s_c[i]<<"\t"<<s_e[i]<<endl;
                     //assert(s_e[i]<1&&s_e[i]>0);
                 }
-                for(int i=0;i<=MAXVERTICLE;++i)
+                for(int i=0;i<docs.size();++i)
                 {
                     beta[i]=beta1[i]/(beta0[i]+beta1[i]);
                     //cerr<<i<<"\t"<<beta[i]<<"\t"<<beta0[i]<<"\t"<<beta1[i]<<endl;
@@ -184,7 +187,7 @@ class mcm:public model
                     fprintf(outfile,"\t");
             }
             fprintf(outfile,"%u\n",MAXVERTICLE);
-            for(int i=0;i<=MAXVERTICLE;++i)
+            for(int i=0;i<docs.size();++i)
             {
                 fprintf(outfile,"%.8lf",beta[i]);
                 if(i==MAXVERTICLE)
@@ -216,8 +219,8 @@ class mcm:public model
             unsigned int cnt;
             fscanf(infile,"%u",&cnt);
             MAXVERTICLE=cnt;
-            beta=vector<double>(cnt+1);
-            for(int i=0;i<=MAXVERTICLE;++i)
+            beta=vector<double>(docs.size()+1);
+            for(int i=0;i<docs.size();++i)
                 fscanf(infile,"%lf",&beta[i]);
             //cerr<<cnt<<endl;
             fscanf(infile,"%u",&cnt);
@@ -261,16 +264,16 @@ class mcm:public model
                 int vid=docs[id].type;
                 if(sess.click_time[i+1]>.1)
                 {
-                    forward[i+1][0]=forward[i][0]*gamma[i+1][i+1-last_clk[i]]*alpha[id]*beta[vid]*(1.-s_c[id]);
-                    forward[i+1][1]=forward[i][0]*gamma[i+1][i+1-last_clk[i]]*alpha[id]*beta[vid]*s_c[id];
-                    //cerr<<"CLK!\t"<<sess.doc_id[i+1]<<"\t"<<vid<<"\t"<<forward[i+1][0]<<"\t"<<forward[i+1][1]<<"\t"<<gamma[i+1][i+1-last_clk[i]]<<"\t"<<alpha[id]<<"\t"<<beta[vid]<<endl;
+                    forward[i+1][0]=forward[i][0]*gamma[i+1][i+1-last_clk[i]]*alpha[id]*beta[id]*(1.-s_c[id]);
+                    forward[i+1][1]=forward[i][0]*gamma[i+1][i+1-last_clk[i]]*alpha[id]*beta[id]*s_c[id];
+                    //cerr<<"CLK!\t"<<sess.doc_id[i+1]<<"\t"<<vid<<"\t"<<forward[i+1][0]<<"\t"<<forward[i+1][1]<<"\t"<<gamma[i+1][i+1-last_clk[i]]<<"\t"<<alpha[id]<<"\t"<<beta[id]<<endl;
                     last_clk[i+1]=i+1;
                 }
                 else
                 {
-                    forward[i+1][0]=forward[i][0]*(1.+gamma[i+1][i+1-last_clk[i]]*alpha[id]*((1.-beta[vid])*(1.-s_e[id])-1.));
-                    forward[i+1][1]=forward[i][0]*gamma[i+1][i+1-last_clk[i]]*alpha[id]*(1.-beta[vid])*s_e[id]+forward[i][1];
-                    //cerr<<"\t\t"<<forward[i+1][0]<<"\t"<<forward[i+1][1]<<"\t"<<gamma[i+1][i+1-last_clk[i]]<<"\t"<<alpha[id]<<"\t"<<beta[vid]<<endl;
+                    forward[i+1][0]=forward[i][0]*(1.+gamma[i+1][i+1-last_clk[i]]*alpha[id]*((1.-beta[id])*(1.-s_e[id])-1.));
+                    forward[i+1][1]=forward[i][0]*gamma[i+1][i+1-last_clk[i]]*alpha[id]*(1.-beta[id])*s_e[id]+forward[i][1];
+                    //cerr<<"\t\t"<<forward[i+1][0]<<"\t"<<forward[i+1][1]<<"\t"<<gamma[i+1][i+1-last_clk[i]]<<"\t"<<alpha[id]<<"\t"<<beta[id]<<endl;
                     last_clk[i+1]=last_clk[i];
                 }
             }
@@ -282,12 +285,12 @@ class mcm:public model
                 int vid=docs[id].type;
                 if(sess.click_time[i]>.1)
                 {
-                    backward[i-1][0]=(backward[i][0]*(1.-s_c[id])+backward[i][1]*s_c[id])*gamma[i][i-last_clk[i-1]]*alpha[id]*beta[vid];
+                    backward[i-1][0]=(backward[i][0]*(1.-s_c[id])+backward[i][1]*s_c[id])*gamma[i][i-last_clk[i-1]]*alpha[id]*beta[id];
                 }
                 else
                 {
-                    backward[i-1][0]=backward[i][0]*(1.+gamma[i][i-last_clk[i-1]]*alpha[id]*((1.-beta[vid])*(1.-s_e[id])-1.))\
-                        +backward[i][1]*gamma[i][i-last_clk[i-1]]*alpha[id]*(1.-beta[vid])*s_e[id];
+                    backward[i-1][0]=backward[i][0]*(1.+gamma[i][i-last_clk[i-1]]*alpha[id]*((1.-beta[id])*(1.-s_e[id])-1.))\
+                        +backward[i][1]*gamma[i][i-last_clk[i-1]]*alpha[id]*(1.-beta[id])*s_e[id];
                     backward[i-1][1]=backward[i][1];
                 }
             }
@@ -314,12 +317,12 @@ class mcm:public model
                 int vid=docs[id].type;
                 if(sess.click_time[i]>.1)
                 {
-                    click_prob[i]=forward[i-1][0]/(forward[i-1][0]+forward[i-1][1])*gamma[i][i-last_clk]*alpha[id]*beta[vid];
+                    click_prob[i]=forward[i-1][0]/(forward[i-1][0]+forward[i-1][1])*gamma[i][i-last_clk]*alpha[id]*beta[id];
                     last_clk=i;
                 }
                 else
                 {
-                    click_prob[i]=1.-forward[i-1][0]/(forward[i-1][0]+forward[i-1][1])*gamma[i][i-last_clk]*alpha[id]*beta[vid];
+                    click_prob[i]=1.-forward[i-1][0]/(forward[i-1][0]+forward[i-1][1])*gamma[i][i-last_clk]*alpha[id]*beta[id];
                 }
             }
             /*for(int i=1;i<=DOCPERPAGE;++i)
@@ -328,15 +331,15 @@ class mcm:public model
                 int vid=docs[id].type;
                 if(sess.click_time[i]>.1)
                 {
-                    click_prob[i]=(1.-s_prob)*gamma[i][i-last_clk]*alpha[id]*beta[vid];
+                    click_prob[i]=(1.-s_prob)*gamma[i][i-last_clk]*alpha[id]*beta[id];
                     s_prob=s_c[id];
                     last_clk=i;
                 }
                 else
                 {
-                    click_prob[i]=1.-(1.-s_prob)*gamma[i][i-last_clk]*alpha[id]*beta[vid];
-                    s_prob+=(1.-s_prob)*s_e[id]*gamma[i][i-last_clk]*alpha[id]*(1.-beta[vid])\
-                        /(1.-alpha[id]*beta[vid]*gamma[i][i-last_clk]);
+                    click_prob[i]=1.-(1.-s_prob)*gamma[i][i-last_clk]*alpha[id]*beta[id];
+                    s_prob+=(1.-s_prob)*s_e[id]*gamma[i][i-last_clk]*alpha[id]*(1.-beta[id])\
+                        /(1.-alpha[id]*beta[id]*gamma[i][i-last_clk]);
                 }
             }*/
         }
