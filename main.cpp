@@ -18,8 +18,11 @@ Don't use after 2027A.D.
 #include"dbn.h"
 #include"mcm.h"
 #include"ubmlayout.h"
+#include"mcm2.h"
+#include"mcm3.h"
 #include"load_feature.h"
 #include"load_query_list.h"
+#include"data_mining.h"
 using namespace std;
 int main(int argc,char* argv[])
 {
@@ -159,74 +162,14 @@ int main(int argc,char* argv[])
 	cerr<<"Ok querys: "<<querys.size()-qFilter[0]-qFilter[1]<<endl;
 	cerr<<"All docs num: "<<docs.size()<<endl;
 	vector<string> mods=split(pa.get<std::string>("module"),',');
-	#ifdef ZRZ
 	int verticle_num[20][DOCPERPAGE+2];
 	memset(verticle_num,0,sizeof(verticle_num));
 	//int cnt_1=0,cnt_no_1=0;
 	int V,Vc;
 	cerr<<querys.size()<<endl;
 	vector<pair<int,double>> tmpp;
-	for(auto &query:querys)
-		if(query.enable)
-		{
-			Vc=V=0;
-			for(int i=query.last;i>0;i=sessions[i].query_nex)
-			{
-				Session &sess=sessions[i];
-				sess.type=0;
-				for(int i=1;i<=DOCPERPAGE;++i)
-					if(docs[sess.doc_id[i]].type!=1)
-						++sess.type;
-				sess.type;
-				if(sess.enable&&sess.click_cnt)
-				{
-					V+=sess.type;
-					++Vc;
-				}
-			}
-			//cerr<<Vc;
-			if(Vc)
-			{
-				//cerr<<Vc<<" "<<V<<endl;
-				tmpp.push_back(make_pair(Vc,(double)V/Vc));
-				++verticle_num[min(10,(int)(log(Vc)/log(10)))][V/Vc];
-			}
-		}
-	sort(tmpp.begin(),tmpp.end());
-	FILE* tmp_f=fopen("../output/vertical_count","w");
-	for(auto i:tmpp)
-		fprintf(tmp_f,"%d %lf\n",i.first,i.second);
-	fclose(tmp_f);
-    cout<<"Verticle number cnt"<<endl;
-    string kind_name[4]={"None","Train","Test","Val"};
-    for(int k=0;k<=10;++k)
-    {
-        //cout<<kind_name[k]<<" :\t";
-        for(int i=0;i<=DOCPERPAGE;++i)
-            cout<<verticle_num[k][i]<<"\t";
-        cout<<endl;
-    }
-	cerr<<querys.size()<<endl;
-	tmpp.clear();
-	for(auto &query:querys)
-		if(query.enable)
-		{
-			Vc=V=0;
-			for(int i=query.last;i>0;i=sessions[i].query_nex)
-			{
-				Vc+=sessions[i].click_cnt;
-				++V;
-			}
-			if(V)
-				tmpp.push_back(make_pair(V,(double)Vc/V));
-		}
-	sort(tmpp.begin(),tmpp.end());
-	tmp_f=fopen("../output/click_count","w");
-	for(auto i:tmpp)
-		fprintf(tmp_f,"%d %lf\n",i.first,i.second);
-	fclose(tmp_f);
-	return 0;
-	#endif
+	FILE* tmp_f;
+	data_mining();
 	if(find(mods.begin(),mods.end(),"baseline")!=mods.end())
 	{
 		baseline baseline_mod=baseline();
@@ -405,6 +348,66 @@ int main(int argc,char* argv[])
 			mcm_mod.sample();
 		#ifdef DEBUG
 			mcm_mod.check();
+		#endif
+	}
+	if(find(mods.begin(),mods.end(),"mcm2")!=mods.end())
+	{
+		mcm2 mcm2_mod=mcm2();
+		if(datas[0]!="none")
+			mcm2_mod.train();
+		else
+			mcm2_mod.load();
+		
+		if(pa.get<std::string>("sample")=="testdata")
+		{
+			mcm2_mod.sample_testdata();//TODO: xxx
+		}
+		else
+		{
+			mcm2_mod.test();
+		}
+		if(pa.get<std::string>("typetest")=="true")
+		{
+			cout<<"Type test mcm:\n";
+			for(int i=0;i<=DOCPERPAGE;++i)
+				cout<<mcm2_mod.test(false,2,i)<<"\t";
+			cout<<endl;
+		}
+		mcm2_mod.dump_rel();
+		if(pa.get<std::string>("sample")=="true")
+			mcm2_mod.sample();
+		#ifdef DEBUG
+			mcm2_mod.check();
+		#endif
+	}
+	if(find(mods.begin(),mods.end(),"mcm3")!=mods.end())
+	{
+		mcm3 mcm2_mod=mcm3();
+		if(datas[0]!="none")
+			mcm2_mod.train();
+		else
+			mcm2_mod.load();
+		
+		if(pa.get<std::string>("sample")=="testdata")
+		{
+			mcm2_mod.sample_testdata();//TODO: xxx
+		}
+		else
+		{
+			mcm2_mod.test();
+		}
+		if(pa.get<std::string>("typetest")=="true")
+		{
+			cout<<"Type test mcm:\n";
+			for(int i=0;i<=DOCPERPAGE;++i)
+				cout<<mcm2_mod.test(false,2,i)<<"\t";
+			cout<<endl;
+		}
+		mcm2_mod.dump_rel();
+		if(pa.get<std::string>("sample")=="true")
+			mcm2_mod.sample();
+		#ifdef DEBUG
+			mcm2_mod.check();
 		#endif
 	}
 	cerr<<"Vertical number:="<<MAXVERTICLE<<endl;
