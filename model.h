@@ -8,7 +8,7 @@ bool istest(Session &sess,int cnt)
         return sess.kind==2;
 	return int(cnt*TRAIN_DATA)==int((cnt-1)*TRAIN_DATA);
 }
-bool istrain(Session &sess,int cnt)
+bool istrain(Session &sess,int cnt=0)
 {
     if(sess.kind)
         return sess.kind==1;
