@@ -11,6 +11,7 @@ Auther: THUIR Ruizhe Zhang
 #include"dump.h"
 #include"dcm.h"
 #include"ubm.h"
+#include"fcm_ubm.h"
 #include"baseline.h"
 #include"data_filter.h"
 #include"load.h"
@@ -214,6 +215,36 @@ int main(int argc,char* argv[])
 		if(pa.get<std::string>("typetest")=="true")
 		{
 			cout<<"Type test ubm:\n";
+			for(int i=0;i<=DOCPERPAGE;++i)
+				cout<<ubm_mod.test(false,2,i)<<"\t";
+			cout<<endl;
+		}
+		ubm_mod.dump_rel();
+		if(pa.get<std::string>("sample")=="true")
+			ubm_mod.sample();
+		#ifdef DEBUG
+			ubm_mod.check();
+		#endif
+	}
+	if(find(mods.begin(),mods.end(),"fcm_ubm")!=mods.end()||find(mods.begin(),mods.end(),"fcm")!=mods.end())
+	{
+		fcm_ubm ubm_mod=fcm_ubm();
+		if(datas[0]!="none")
+			ubm_mod.train();
+		else
+			ubm_mod.load();
+		
+		if(pa.get<std::string>("sample")=="testdata")
+		{
+			ubm_mod.sample_testdata();//TODO: xxx
+		}
+		else
+		{
+			ubm_mod.test();
+		}
+		if(pa.get<std::string>("typetest")=="true")
+		{
+			cout<<"Type test fcm_ubm:\n";
 			for(int i=0;i<=DOCPERPAGE;++i)
 				cout<<ubm_mod.test(false,2,i)<<"\t";
 			cout<<endl;

@@ -40,6 +40,8 @@ class ubm:public model
                 for(int i=0;i<docs.size();++i)
                     doc_rel2[i]=0.5;//FOR SMOOTH
                 int last_clkk;
+                memset(nexgamma,0,sizeof(gamma));
+                memset(gamma_cnt,0,sizeof(gamma_cnt));
                 for(auto &sess:sessions)
                 {
                     if(sess.enable==false)
@@ -49,20 +51,21 @@ class ubm:public model
                     last_clkk=0;
                     for(int i=1;i<=DOCPERPAGE;++i)
                     {
+                        ++gamma_cnt[i][i-last_clkk];
                         if(sess.click_time[i]>.1)
                         {
+                            nexgamma[i][i-last_clkk]+=1.;
                             doc_rel2[sess.doc_id[i]]+=1;
                             last_clkk=i;
                         }
                         else
                         {
+                            nexgamma[i][i-last_clkk]+=(1.-doc_rel[sess.doc_id[i]])*gamma[i][i-last_clkk]/(1.-doc_rel[sess.doc_id[i]]*gamma[i][i-last_clkk]);
                             doc_rel2[sess.doc_id[i]]+=(1.-gamma[i][i-last_clkk])*doc_rel[sess.doc_id[i]]/(1.-doc_rel[sess.doc_id[i]]*gamma[i][i-last_clkk]);
                         }
                     }
                 }
-                memset(nexgamma,0,sizeof(gamma));
-                memset(gamma_cnt,0,sizeof(gamma_cnt));
-                for(auto &sess:sessions)
+                /*for(auto &sess:sessions)
                 {
                     if(sess.enable==false)
                         continue;
@@ -82,7 +85,7 @@ class ubm:public model
                             nexgamma[i][i-last_clkk]+=(1.-doc_rel[sess.doc_id[i]])*gamma[i][i-last_clkk]/(1.-doc_rel[sess.doc_id[i]]*gamma[i][i-last_clkk]);
                         }
                     }
-                }
+                }*/
                 for(int i=0;i<docs.size();++i)
                     if(docs[i].train_tim!=0)
                         doc_rel[i]=doc_rel2[i]/docs[i].train_tim;
@@ -90,7 +93,8 @@ class ubm:public model
                     for(int j=1;j<=i;++j)
                         gamma[i][j]=nexgamma[i][j]/gamma_cnt[i][j];
                 double now_LL,now_LL2,now_LL1;
-                now_LL=this->test(false,3);
+                now_LL=this->test(false,1);//ERROR
+                cerr<<"Vali = "<<now_LL<<endl;
                 //now_LL2=this->test(false,2);
                 //now_LL1=this->test(false,1);
                 if(now_LL-1e-8<last_LL)
