@@ -68,7 +68,7 @@ class vcm:public model
         void clear()
         {
             int i,j;
-            static const pr=1.;
+            static const double pr=1;
             for(i=0;i<=docs.size();++i)
             {
                 calpha[i]=pr*(1./alpha[i]-1./(1.-alpha[i]));
@@ -305,7 +305,6 @@ class vcm:public model
                     int last_clk=0;
                     if(first_vertical[idx]==0)
                     {
-                        continue;//ERROR
                         for(int i=1;i<=DOCPERPAGE;++i)
                             if(sess.click_time[i]>.1)
                             {
@@ -384,12 +383,12 @@ class vcm:public model
             FILE* outfile=fopen("../output/vcm_args","w");
             assert(outfile);
             fclose(outfile);
-            for(int i=1;i<=DOCPERPAGE;++i)
+            /*for(int i=1;i<=DOCPERPAGE;++i)
             {
                 for(int j=1;j<=MAXVERTICLE;++j)
                     cerr<<phi[i][j]<<"\t";
                 cerr<<endl;
-            }
+            }*/
         }
         void load()
         {
