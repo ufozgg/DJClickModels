@@ -4,29 +4,31 @@ bool chk(int cnt,Session &sess)
 {
 	return IFDIV&&istest(sess,cnt);
 }
-void save_as_ucf()
+void save_as_ucf(string name,int kind=0)
 {
 	/*
 		UCF=ufozgg compress format
 		line = queryword[Tab][query_tim][Tab][user_name][docs*10]
 		docs = url[Tab]verticle_type[Tab]Click_tim
 	*/
-	int cnt=0,num=0;
+	int Qc=0,cnt=0,num=0;
 	sprintf(tmp,"%05d",num);
 	string file_name,file_name2;
 	FILE* sav,*sav2;
 	if(SAVEBLOCK)
-		file_name=save_file+tmp+".ucf";
+		file_name=name+tmp+".ucf";
 	else
-		file_name=save_file+".ucf";
+		file_name=name+".ucf";
 	cout<<"DUMP to "<<file_name<<endl;
 	sav=fopen(file_name.data(),"w");
-	for(auto &j:querys)
+	for(int j=0;j<querys.size();++j)
+	if(querys[j].enable)
 	{
-		for(int w=j.last;w>0;)
+		++Qc;
+		for(int w=querys[j].last;w>0;)
 		{
 			Session &i=sessions[w];
-			if(!i.enable)
+			if((!i.enable)||(kind!=0&&kind!=i.kind))
 			{
 				w=i.query_nex;
 				continue;
@@ -50,6 +52,7 @@ void save_as_ucf()
 			w=i.query_nex;
 		}
 	}
+	cerr<<cnt<<"\t"<<Qc<<endl;
 	fclose(sav);
 }
 void save_as_clc()
@@ -60,6 +63,7 @@ void save_as_clc()
 	FILE* sav,*sav2;
 	if(IFDIV)
 	{
+		assert(0);//DON'T THIS DIV UNLESS YOU KNOW HOW IT WORKS
 		file_name=save_file+tmp+"_train.clc";
 		cout<<"DUMP to "<<file_name<<endl;
 		sav=fopen(file_name.data(),"w");
