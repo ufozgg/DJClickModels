@@ -20,6 +20,7 @@ Auther: THUIR Ruizhe Zhang
 #include"ubmlayout.h"
 #include"mcm2.h"
 #include"mcm3.h"
+#include"vcm.h"
 #include"load_feature.h"
 #include"load_query_list.h"
 #include"data_mining.h"
@@ -224,6 +225,36 @@ int main(int argc,char* argv[])
 			ubm_mod.sample();
 		#ifdef DEBUG
 			ubm_mod.check();
+		#endif
+	}
+	if(find(mods.begin(),mods.end(),"vcm")!=mods.end())
+	{
+		vcm vcm_mod=vcm();
+		if(datas[0]!="none")
+			vcm_mod.train();
+		else
+			vcm_mod.load();
+		
+		if(pa.get<std::string>("sample")=="testdata")
+		{
+			vcm_mod.sample_testdata();//TODO: xxx
+		}
+		else
+		{
+			vcm_mod.test();
+		}
+		if(pa.get<std::string>("typetest")=="true")
+		{
+			cout<<"Type test ubm:\n";
+			for(int i=0;i<=DOCPERPAGE;++i)
+				cout<<vcm_mod.test(false,2,i)<<"\t";
+			cout<<endl;
+		}
+		vcm_mod.dump_rel();
+		if(pa.get<std::string>("sample")=="true")
+			vcm_mod.sample();
+		#ifdef DEBUG
+			vcm_mod.check();
 		#endif
 	}
 	if(find(mods.begin(),mods.end(),"fcm_ubm")!=mods.end()||find(mods.begin(),mods.end(),"fcm")!=mods.end())

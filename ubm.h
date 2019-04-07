@@ -5,16 +5,18 @@ class ubm:public model
 {
     public:
         double gamma[DOCPERPAGE+2][DOCPERPAGE+2];
-        vector<double> doc_rel2;
+        vector<double> doc_rel0,doc_rel1;
         void train()
         {
             name="Ubm";
             doc_rel=vector<double>(docs.size()+1);
-            doc_rel2=vector<double>(docs.size()+1);
+            doc_rel0=vector<double>(docs.size()+1);
+            doc_rel1=vector<double>(docs.size()+1);
             for(int i=0;i<docs.size();++i)
             {
                 doc_rel[i]=0.5;
-                docs[i].train_tim=1;//FOR SMOOTH
+                /*docs[i].train_tim=1;//FOR SMOOTH
+                */
             }
             for(int i=1;i<=DOCPERPAGE;++i)
                 for(int j=1;j<=i;++j)
@@ -32,36 +34,50 @@ class ubm:public model
                     ++docs[sess.doc_id[i]].train_tim;
             }
             int sess_id,pos_id,new_sess,new_pos;
-            double nexgamma[DOCPERPAGE+2][DOCPERPAGE+2];
-            int gamma_cnt[DOCPERPAGE+2][DOCPERPAGE+2];
+            double gamma0[DOCPERPAGE+2][DOCPERPAGE+2],gamma1[DOCPERPAGE+2][DOCPERPAGE+2];
             int rnd;
+            double p0,cpb[20];
             for(rnd=1;rnd<=MAXROUND;++rnd)
             {
                 for(int i=0;i<docs.size();++i)
-                    doc_rel2[i]=0.5;//FOR SMOOTH
+                {
+                    doc_rel0[i]=0.5;//FOR SMOOTH
+                    doc_rel1[i]=1;
+                }
+                for(int i=1;i<=DOCPERPAGE;++i)
+                    for(int j=1;j<=i;++j)
+                    {
+                        gamma0[i][j]=0.5;
+                        gamma1[i][j]=1;
+                    }
                 int last_clkk;
-                memset(nexgamma,0,sizeof(gamma));
-                memset(gamma_cnt,0,sizeof(gamma_cnt));
                 for(auto &sess:sessions)
                 {
                     if(sess.enable==false)
                         continue;
                     if(!istrain(sess,sess_cnt))
                         continue;
+                    /*get_click_prob(sess,cpb);
+                    p0=1.;
+                    for(int i=1;i<=DOCPERPAGE;++i)
+                        p0*=cpb[i];*/
                     last_clkk=0;
                     for(int i=1;i<=DOCPERPAGE;++i)
                     {
-                        ++gamma_cnt[i][i-last_clkk];
+                        gamma1[i][i-last_clkk]+=1.;
                         if(sess.click_time[i]>.1)
                         {
-                            nexgamma[i][i-last_clkk]+=1.;
-                            doc_rel2[sess.doc_id[i]]+=1;
+                            gamma0[i][i-last_clkk]+=1.;
+                            doc_rel0[sess.doc_id[i]]+=1.;
+                            doc_rel1[sess.doc_id[i]]+=1.;
                             last_clkk=i;
                         }
                         else
                         {
-                            nexgamma[i][i-last_clkk]+=(1.-doc_rel[sess.doc_id[i]])*gamma[i][i-last_clkk]/(1.-doc_rel[sess.doc_id[i]]*gamma[i][i-last_clkk]);
-                            doc_rel2[sess.doc_id[i]]+=(1.-gamma[i][i-last_clkk])*doc_rel[sess.doc_id[i]]/(1.-doc_rel[sess.doc_id[i]]*gamma[i][i-last_clkk]);
+                            gamma0[i][i-last_clkk]+=(1.-doc_rel[sess.doc_id[i]])*gamma[i][i-last_clkk]/(1.-doc_rel[sess.doc_id[i]]*gamma[i][i-last_clkk]);
+                            //doc_rel0[sess.doc_id[i]]+=(1.-gamma[i][i-last_clkk])*doc_rel[sess.doc_id[i]]/(1.-doc_rel[sess.doc_id[i]]*gamma[i][i-last_clkk]);
+                            //doc_rel1[sess.doc_id[i]]+=1.;
+                            doc_rel1[sess.doc_id[i]]+=gamma[i][i-last_clkk]*(1.-doc_rel[sess.doc_id[i]])/(1.-doc_rel[sess.doc_id[i]]*gamma[i][i-last_clkk]);
                         }
                     }
                 }
@@ -74,31 +90,34 @@ class ubm:public model
                     last_clkk=0;
                     for(int i=1;i<=DOCPERPAGE;++i)
                     {
-                        ++gamma_cnt[i][i-last_clkk];
+                        ++gamma1[i][i-last_clkk];
                         if(sess.click_time[i]>.1)
                         {
-                            nexgamma[i][i-last_clkk]+=1.;
+                            gamma0[i][i-last_clkk]+=1.;
                             last_clkk=i;
                         }
                         else
                         {
-                            nexgamma[i][i-last_clkk]+=(1.-doc_rel[sess.doc_id[i]])*gamma[i][i-last_clkk]/(1.-doc_rel[sess.doc_id[i]]*gamma[i][i-last_clkk]);
+                            gamma0[i][i-last_clkk]+=(1.-doc_rel[sess.doc_id[i]])*gamma[i][i-last_clkk]/(1.-doc_rel[sess.doc_id[i]]*gamma[i][i-last_clkk]);
                         }
                     }
                 }*/
                 for(int i=0;i<docs.size();++i)
-                    if(docs[i].train_tim!=0)
-                        doc_rel[i]=doc_rel2[i]/docs[i].train_tim;
+                    doc_rel[i]=doc_rel0[i]/doc_rel1[i];
                 for(int i=1;i<=DOCPERPAGE;++i)
+                {
                     for(int j=1;j<=i;++j)
-                        gamma[i][j]=nexgamma[i][j]/gamma_cnt[i][j];
+                    {
+                        gamma[i][j]=gamma0[i][j]/gamma1[i][j];
+                    }
+                }
                 double now_LL,now_LL2,now_LL1;
                 now_LL=this->test(false,1);//ERROR
-                cerr<<"Vali = "<<now_LL<<endl;
+                cerr<<"Round = "<<rnd<<"\tVali = "<<now_LL<<"\t"<<gamma[4][2]<<endl;
                 //now_LL2=this->test(false,2);
                 //now_LL1=this->test(false,1);
-                if(now_LL-1e-8<last_LL)
-                    break;
+                /*if(now_LL-1e-8<last_LL)
+                    break;*/
                 //if(rnd%100==0)
                 //    cout<<"UBM LL:=\t"<<rnd<<"\t"<<fixed<<setprecision(12)<<now_LL<<endl;
                 //cout<<now_LL1<<","<<now_LL2<<","<<now_LL<<endl;
@@ -132,6 +151,12 @@ class ubm:public model
                     fprintf(outfile,"\t%.8lf\n",doc_rel[i]);
                 }
             fclose(outfile);
+            for(int i=1;i<=DOCPERPAGE;++i)
+            {
+                for(int j=1;j<=i;++j)
+                    cerr<<gamma[i][j]<<"\t";
+                cerr<<endl;
+            }
         }
         void load()
         {
