@@ -362,9 +362,12 @@ class vcm:public model
                 }
                 update(rnd);
                 delta*=dlt;
-                now_LL=this->test(false,1);
-                cerr<<"Round = "<<rnd<<"\tTrain = "<<now_LL<<"\tDelta = "<<delta<<"\t"<<gamma[4][2]<<"\t"<<sigma[2][4]<<endl;
-                //now_LL2=this->test(false,2);
+		if(rnd%20==0)
+		{
+                	now_LL=this->test(false,2);
+                	cerr<<"Round = "<<rnd<<"\tTest = "<<now_LL<<"\tDelta = "<<delta<<"\t"<<gamma[4][2]<<"\t"<<sigma[2][4]<<endl;
+                }
+		//now_LL2=this->test(false,2);
                 //now_LL1=this->test(false,1);
                 //if(rnd%100==0)
                 //    cout<<"UBM LL:=\t"<<rnd<<"\t"<<fixed<<setprecision(12)<<now_LL<<endl;
