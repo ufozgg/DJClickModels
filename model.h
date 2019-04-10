@@ -161,7 +161,7 @@ class model
             file_name+=name+".relevence";
             FILE* file=fopen(file_name.data(),"w");
             for(int i=0;i<docs.size();++i)
-                if(docs[i].train_tim)
+                if(docs[i].train_tim&&i<doc_rel.size())
                 {
                     fprintf(file,"%s\t%s\n",docs[i].name.data(),to_string(doc_rel[i]).data());
                 }
