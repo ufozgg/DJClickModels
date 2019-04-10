@@ -6,8 +6,9 @@ class vcm:public model
     public:
         double gamma[DOCPERPAGE+2][DOCPERPAGE+2],cgamma[DOCPERPAGE+2][DOCPERPAGE+2];
         vector<vector<double>> phi,sigma,cphi,csigma;
-        vector<double> alpha,beta,cita,calpha,cbeta,ccita;
+        vector<double> alpha,beta,cita,calpha,cbeta,ccita,cccita;//Beta is alpha + beta in paper
         vector<int> first_vertical;
+        vector<int> train_tim;
         vector<int> doc_cnt;
         double protect[10];//={1e-4,0.2,0.1,0.07,0.04};
         double delta=0.1,dlt=0.9,eps=1e-3;
@@ -20,12 +21,14 @@ class vcm:public model
             for(i=0;i<=docs.size();++i)
             {
                 alpha.push_back(0.5);
-                beta.push_back(0.);
+                beta.push_back(0.5);
                 cita.push_back(0.);
                 calpha.push_back(0.);
                 cbeta.push_back(0.);
                 ccita.push_back(0.);
+                cccita.push_back(0.);
                 doc_cnt.push_back(0);
+                train_tim.push_back(0);
             }
             for(i=0;i<=sessions.size();++i)
             {
@@ -68,12 +71,19 @@ class vcm:public model
         void clear()
         {
             int i,j;
-            static const double pr=1;
+            static const double pr=1,clb=-.5,cub=.5;
             for(i=0;i<=docs.size();++i)
             {
                 calpha[i]=pr*(1./alpha[i]-1./(1.-alpha[i]));
-                cbeta[i]=pr*(1./((beta[i]+1)/2)-1./(1.-(beta[i]+1)/2));
-                ccita[i]=pr*(1./((cita[i]+1)/2)-1./(1.-(cita[i]+1)/2));
+                cbeta[i]=pr*(1./beta[i]-1./(1.-beta[i]));//pr*(1./((beta[i]+1)/2)-1./(1.-(beta[i]+1)/2));
+                ccita[i]=2*pr*(1./((cita[i]-clb)/(cub-clb))-1./(1.-(cita[i]-clb)/(cub-clb)));
+                /*if(train_tim[i])
+                {
+                    cccita[i]/=train_tim[i];
+                    ccita[i]=pr*(1./(rge(cita[i]+cccita[i]))-1./(1.-rge(cita[i]+cccita[i])));//pr*(1./((cita[i]+1)/2)-1./(1.-(cita[i]+1)/2));
+                }
+                cccita[i]=0;
+                train_tim[i]=0;*/
             }
             for(i=0;i<=DOCPERPAGE;++i)
             {
@@ -111,8 +121,9 @@ class vcm:public model
                 for(int i=0;i<=docs.size();++i)
                 {
                     update_num(alpha[i],calpha[i]);
-                    update_num(beta[i],cbeta[i],-1,1);
+                    update_num(beta[i],cbeta[i]);
                     update_num(cita[i],ccita[i],-1,1);
+                    //cita[i]=0;
                 }
                 for(int i=0;i<=DOCPERPAGE;++i)
                 {
@@ -145,12 +156,12 @@ class vcm:public model
             {
                 if(sess.click_time[i]>.1)
                 {
-                    p1*=rge((alpha[sess.doc_id[i]]+beta[sess.doc_id[i]]))*rge((gamma[num][num-last_clk]+cita[sess.doc_id[i]]));
+                    p1*=rge((beta[sess.doc_id[i]]))*rge((gamma[num][num-last_clk]+cita[sess.doc_id[i]]));
                     last_clk=num;
                 }
                 else
                 {
-                    p1*=1.-rge((alpha[sess.doc_id[i]]+beta[sess.doc_id[i]]))*rge((gamma[num][num-last_clk]+cita[sess.doc_id[i]]));
+                    p1*=1.-rge((beta[sess.doc_id[i]]))*rge((gamma[num][num-last_clk]+cita[sess.doc_id[i]]));
                 }
                 ++num;
             }
@@ -158,12 +169,12 @@ class vcm:public model
             {
                 if(sess.click_time[i]>.1)
                 {
-                    p1*=rge((alpha[sess.doc_id[i]]+beta[sess.doc_id[i]]))*rge((gamma[num][num-last_clk]+cita[sess.doc_id[i]]));
+                    p1*=rge((beta[sess.doc_id[i]]))*rge((gamma[num][num-last_clk]+cita[sess.doc_id[i]]));
                     last_clk=num;
                 }
                 else
                 {
-                    p1*=1.-rge((alpha[sess.doc_id[i]]+beta[sess.doc_id[i]]))*rge((gamma[num][num-last_clk]+cita[sess.doc_id[i]]));
+                    p1*=1.-rge((beta[sess.doc_id[i]]))*rge((gamma[num][num-last_clk]+cita[sess.doc_id[i]]));
                 }
                 ++num;
             }
@@ -172,12 +183,12 @@ class vcm:public model
             num=1;
             if(sess.click_time[v]>.1)
             {
-                p2*=rge((alpha[sess.doc_id[v]]+beta[sess.doc_id[v]]))*rge((gamma[num][num-last_clk]+cita[sess.doc_id[v]]));
+                p2*=rge((beta[sess.doc_id[v]]))*rge((gamma[num][num-last_clk]+cita[sess.doc_id[v]]));
                 last_clk=num;
             }
             else
             {
-                p2*=1.-rge((alpha[sess.doc_id[v]]+beta[sess.doc_id[v]]))*rge((gamma[num][num-last_clk]+cita[sess.doc_id[v]]));
+                p2*=1.-rge((beta[sess.doc_id[v]]))*rge((gamma[num][num-last_clk]+cita[sess.doc_id[v]]));
             }
             ++num;
             for(int i=1;i<=DOCPERPAGE;++i)
@@ -185,12 +196,12 @@ class vcm:public model
                 {
                     if(sess.click_time[i]>.1)
                     {
-                        p2*=rge((alpha[sess.doc_id[i]]+beta[sess.doc_id[i]]))*rge((gamma[num][num-last_clk]+cita[sess.doc_id[i]]));
+                        p2*=rge((beta[sess.doc_id[i]]))*rge((gamma[num][num-last_clk]+cita[sess.doc_id[i]]));
                         last_clk=num;
                     }
                     else
                     {
-                        p2*=1.-rge((alpha[sess.doc_id[i]]+beta[sess.doc_id[i]]))*rge((gamma[num][num-last_clk]+cita[sess.doc_id[i]]));
+                        p2*=1.-rge((beta[sess.doc_id[i]]))*rge((gamma[num][num-last_clk]+cita[sess.doc_id[i]]));
                     }
                     ++num;
                 }
@@ -229,14 +240,16 @@ class vcm:public model
             bet=beta[sess.doc_id[i]];
             gam=gamma[num][num-last_clk];
             cit=cita[sess.doc_id[i]];
+            ++train_tim[sess.doc_id[i]];
+            cccita[sess.doc_id[i]]+=gam;
             if(sess.click_time[i]>.1)
             {
-                if(alp+bet<1.-2*eps&&alp+bet>2*eps)
+                //if(alp+bet<1.-2*eps&&alp+bet>2*eps)
                 {
-                    calpha[sess.doc_id[i]]+=p/rge(alp+bet)/ptot;
-                    cbeta[sess.doc_id[i]]+=p/rge(alp+bet)/ptot;
+                    //calpha[sess.doc_id[i]]+=p/rge(alp+bet)/ptot;
+                    cbeta[sess.doc_id[i]]+=p/rge(bet)/ptot;
                 }
-                if(gam+cit<1.-2*eps&&gam+cit>2*eps)
+                if(gam+cit<1.-2*eps/*&&gam+cit>2*eps*/)
                 {
                     cgamma[num][num-last_clk]+=p/rge(gam+cit)/ptot;
                     ccita[sess.doc_id[i]]+=p/rge(gam+cit)/ptot;
@@ -245,15 +258,15 @@ class vcm:public model
             }
             else
             {
-                if(alp+bet<1.-2*eps&&alp+bet>2*eps)
+                //if(alp+bet<1.-2*eps&&alp+bet>2*eps)
                 {
-                    calpha[sess.doc_id[i]]-=p/(1.-rge(alp+bet)*rge(gam+cit))*rge(gam+cit)/ptot;
-                    cbeta[sess.doc_id[i]]-=p/(1.-rge(alp+bet)*rge(gam+cit))*rge(gam+cit)/ptot;
+                    //calpha[sess.doc_id[i]]-=p/(1.-rge(alp+bet)*rge(gam+cit))*rge(gam+cit)/ptot;
+                    cbeta[sess.doc_id[i]]-=p/(1.-rge(bet)*rge(gam+cit))*rge(gam+cit)/ptot;
                 }
-                if(gam+cit<1.-2*eps&&gam+cit>2*eps)
+                if(/*gam+cit<1.-2*eps&&*/gam+cit>2*eps)
                 {
-                    cgamma[num][num-last_clk]-=p/(1.-rge(alp+bet)*rge(gam+cit))*rge(alp+bet)/ptot;
-                    ccita[sess.doc_id[i]]-=p/(1.-rge(alp+bet)*rge(gam+cit))*rge(alp+bet)/ptot;
+                    cgamma[num][num-last_clk]-=p/(1.-rge(bet)*rge(gam+cit))*rge(bet)/ptot;
+                    ccita[sess.doc_id[i]]-=p/(1.-rge(bet)*rge(gam+cit))*rge(bet)/ptot;
                 }
             }
             ++num;
@@ -431,12 +444,12 @@ class vcm:public model
             {
                 if(sess.click_time[i]>.1)
                 {
-                    click_prob[i]=c1*(rge(alpha[sess.doc_id[i]]+beta[sess.doc_id[i]])*rge(gamma[num][num-last_clkk]+cita[sess.doc_id[i]]));
+                    click_prob[i]=c1*(rge(beta[sess.doc_id[i]])*rge(gamma[num][num-last_clkk]+cita[sess.doc_id[i]]));
                     last_clkk=num;
                 }
                 else
                 {
-                    click_prob[i]=c1*(1.-rge(alpha[sess.doc_id[i]]+beta[sess.doc_id[i]])*rge(gamma[num][num-last_clkk]+cita[sess.doc_id[i]]));
+                    click_prob[i]=c1*(1.-rge(beta[sess.doc_id[i]])*rge(gamma[num][num-last_clkk]+cita[sess.doc_id[i]]));
                 }
                 ++num;
             }
@@ -444,12 +457,12 @@ class vcm:public model
             {
                 if(sess.click_time[i]>.1)
                 {
-                    click_prob[i]=c1*(rge(alpha[sess.doc_id[i]]+beta[sess.doc_id[i]])*rge(gamma[num][num-last_clkk]+cita[sess.doc_id[i]]));
+                    click_prob[i]=c1*(rge(beta[sess.doc_id[i]])*rge(gamma[num][num-last_clkk]+cita[sess.doc_id[i]]));
                     last_clkk=num;
                 }
                 else
                 {
-                    click_prob[i]=c1*(1.-rge(alpha[sess.doc_id[i]]+beta[sess.doc_id[i]])*rge(gamma[num][num-last_clkk]+cita[sess.doc_id[i]]));
+                    click_prob[i]=c1*(1.-rge(beta[sess.doc_id[i]])*rge(gamma[num][num-last_clkk]+cita[sess.doc_id[i]]));
                 }
                 ++num;
             }
@@ -459,12 +472,12 @@ class vcm:public model
             i=v;
             if(sess.click_time[i]>.1)
             {
-                click_prob[i]+=c2*(rge(alpha[sess.doc_id[i]]+beta[sess.doc_id[i]])*rge(gamma[num][num-last_clkk]+cita[sess.doc_id[i]]));
+                click_prob[i]+=c2*(rge(beta[sess.doc_id[i]])*rge(gamma[num][num-last_clkk]+cita[sess.doc_id[i]]));
                 last_clkk=num;
             }
             else
             {
-                click_prob[i]+=c2*(1.-rge(alpha[sess.doc_id[i]]+beta[sess.doc_id[i]])*rge(gamma[num][num-last_clkk]+cita[sess.doc_id[i]]));
+                click_prob[i]+=c2*(1.-rge(beta[sess.doc_id[i]])*rge(gamma[num][num-last_clkk]+cita[sess.doc_id[i]]));
             }
             ++num;
             for(i=1;i<=DOCPERPAGE;++i)
@@ -472,12 +485,12 @@ class vcm:public model
                 {
                     if(sess.click_time[i]>.1)
                     {
-                        click_prob[i]+=c2*(rge(alpha[sess.doc_id[i]]+beta[sess.doc_id[i]])*rge(gamma[num][num-last_clkk]+cita[sess.doc_id[i]]));
+                        click_prob[i]+=c2*(rge(beta[sess.doc_id[i]])*rge(gamma[num][num-last_clkk]+cita[sess.doc_id[i]]));
                         last_clkk=num;
                     }
                     else
                     {
-                        click_prob[i]+=c2*(1.-rge(alpha[sess.doc_id[i]]+beta[sess.doc_id[i]])*rge(gamma[num][num-last_clkk]+cita[sess.doc_id[i]]));
+                        click_prob[i]+=c2*(1.-rge(beta[sess.doc_id[i]])*rge(gamma[num][num-last_clkk]+cita[sess.doc_id[i]]));
                     }
                     ++num;
                 }
