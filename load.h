@@ -161,7 +161,7 @@ bool line_Data_ucf(const string &line,int type)
 	for(int i=1;i<=DOCPERPAGE;++i)
 		if(docs[now.doc_id[i]].type>1)
 			++v;
-	if(v==1&&(IFFILTER==0||(now.click_cnt>=MINCLICK&&now.click_cnt<=MAXCLICK)))
+	if(v==10&&(IFFILTER==0||(now.click_cnt>=MINCLICK&&now.click_cnt<=MAXCLICK)))
 	{
 		++querys[now.query_id].sess_cnt;
 		now.enable=1;
