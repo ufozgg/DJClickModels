@@ -238,6 +238,76 @@ void data_mining()
     cout<<endl;
     cout<<"========================="<<endl;
     #endif
+	#ifdef CLKSEQ
+	long long seqcnt[DOCPERPAGE+2][1<<DOCPERPAGE+2],sum[DOCPERPAGE+2][1<<DOCPERPAGE+2];//seqcnt[A][B]  A=click_cnt  B=click_seq,0 for Non-V 1 for V
+	int clk_c,clk_k;
+	long long sess_cnt=0;
+	pair<int,double> clk_s[DOCPERPAGE+2];
+	memset(seqcnt,0,sizeof(seqcnt));
+	for(auto &sess:sessions)
+	{
+		if(!sess.enable)
+			continue;
+		++sess_cnt;
+		clk_c=0;
+		clk_k=0;
+		for(int i=1;i<=DOCPERPAGE;++i)
+			if(sess.click_time[i]>.1)
+				clk_s[++clk_c]=make_pair(docs[sess.doc_id[i]].type==1?0:1,sess.click_time[i]);
+		sort(clk_s+1,clk_s+clk_c+1,[](pair<int,double> a, pair<int,double> b) -> bool { return a.second < b.second; });
+		for(int i=1;i<=clk_c;++i)
+			clk_k=clk_k<<1|clk_s[i].first;
+		++seqcnt[clk_c][clk_k];
+	}
+	memcpy(sum,seqcnt,sizeof(sum));
+	for(int i=DOCPERPAGE;i;--i)
+	{
+		for(int j=0;j<(1<<i);++j)
+			sum[i-1][j>>1]+=sum[i][j];
+	}
+	for(int i=1;i<=4;++i)
+	{
+		for(int j=0;j<(1<<i);++j)
+		if(seqcnt[i][j])
+		{
+			cerr<<i<<"\t";
+			for(int k=i-1;~k;--k)
+				if((1<<k)&j)
+					cerr<<"1";
+				else
+					cerr<<"0";
+			cerr<<"\t"<<100.*seqcnt[i][j]/sum[i][j]<<endl;
+		}
+	}
+	for(int i=1;i<=4;++i)
+	{
+		for(int j=0;j<(1<<i);++j)
+		if(seqcnt[i][j])
+		{
+			cerr<<i<<"\t";
+			for(int k=i-1;~k;--k)
+				if((1<<k)&j)
+					cerr<<"1";
+				else
+					cerr<<"0";
+			cerr<<"\t"<<100.*sum[i][j]/sum[i-1][j>>1]<<endl;
+		}
+	}
+	for(int i=1;i<=4;++i)
+	{
+		for(int j=0;j<(1<<i);++j)
+		if(seqcnt[i][j])
+		{
+			cerr<<i<<"\t";
+			for(int k=i-1;~k;--k)
+				if((1<<k)&j)
+					cerr<<"1";
+				else
+					cerr<<"0";
+			cerr<<"\t"<<100.*sum[i][j]/(sum[i][j]+sum[i][j^1])<<endl;
+		}
+	}
+	#endif
     #ifdef VOFFIRST4RES
     int cnt[20]={};
     int clk_cnt[20][5];
