@@ -99,7 +99,7 @@ class vcmlayout:public model
             for(int p=0;p<=1;++p)
             for(i=0;i<=DOCPERPAGE;++i)
                 for(j=0;j<=DOCPERPAGE;++j)
-                    cgamma[s][p][i][j]=0;//pr*(1./gamma[s][p][i][j]-1./(1.-gamma[s][p][i][j]));
+                    cgamma[s][p][i][j]=pr*(1./gamma[s][p][i][j]-1./(1.-gamma[s][p][i][j]));
         }
         void update_num(double &p,double add,double prc=1e-6,double lb=0.,double hb=1.)
         {
