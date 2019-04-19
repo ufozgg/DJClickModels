@@ -22,6 +22,7 @@ Don't use after 2027A.D.
 #include"mcm2.h"
 #include"mcm3.h"
 #include"vcm.h"
+#include"mcm_sgd.h"
 #include"vcm_layout.h"
 #include"load_feature.h"
 #include"load_query_list.h"
@@ -416,6 +417,36 @@ int main(int argc,char* argv[])
 	if(find(mods.begin(),mods.end(),"mcm")!=mods.end())
 	{
 		mcm mcm_mod=mcm();
+		if(datas[0]!="none")
+			mcm_mod.train();
+		else
+			mcm_mod.load();
+		
+		if(pa.get<std::string>("sample")=="testdata")
+		{
+			mcm_mod.sample_testdata();//TODO: xxx
+		}
+		else
+		{
+			mcm_mod.test();
+		}
+		if(pa.get<std::string>("typetest")=="true")
+		{
+			cout<<"Type test mcm:\n";
+			for(int i=0;i<=DOCPERPAGE;++i)
+				cout<<mcm_mod.test(false,2,i)<<"\t";
+			cout<<endl;
+		}
+		mcm_mod.dump_rel();
+		if(pa.get<std::string>("sample")=="true")
+			mcm_mod.sample();
+		#ifdef DEBUG
+			mcm_mod.check();
+		#endif
+	}
+	if(find(mods.begin(),mods.end(),"mcm_sgd")!=mods.end())
+	{
+		mcm_sgd mcm_mod=mcm_sgd();
 		if(datas[0]!="none")
 			mcm_mod.train();
 		else

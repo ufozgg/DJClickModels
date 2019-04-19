@@ -122,7 +122,8 @@ class vcm:public model
                 {
                     update_num(alpha[i],calpha[i]);
                     update_num(beta[i],cbeta[i]);
-                    update_num(cita[i],ccita[i],-1,1);
+                    cita[i]=0;
+                    //update_num(cita[i],ccita[i],-1,1);
                     //cita[i]=0;
                 }
                 for(int i=0;i<=DOCPERPAGE;++i)
