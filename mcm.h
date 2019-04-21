@@ -174,8 +174,8 @@ class mcm:public model
                     cerr<<"Round:\t"<<round<<"\tLL:\t"<<now_ll<<"\t"<<maxdlt<<endl;
                 /*if(round%10==0)
                     cerr<<"Test:\t"<<test(false,2)<<endl;*/
-                if(now_ll-1e-8<last_ll)
-                    break;
+                /*if(now_ll-1e-8<last_ll)
+                    break;*/
                 last_ll=now_ll;
             }
 
