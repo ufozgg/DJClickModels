@@ -30,7 +30,7 @@ class vcm:public model
                 doc_cnt.push_back(0);
                 train_tim.push_back(0);
             }
-            for(i=0;i<=sessions.size();++i)
+            for(i=0;i<sessions.size();++i)
             {
                 first_vertical.push_back(0);
                 for(j=1;j<=DOCPERPAGE;++j)

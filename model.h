@@ -225,11 +225,11 @@ class model
                 ++sess_cnt;
                 if(sess.kind!=kind||(type!=-1&&type!=sess.type))
                     continue;
-                /*int v;
+                int v;
                 for(v=1;v<=DOCPERPAGE;++v)
                     if(docs[sess.doc_id[v]].type>1)
                         break;
-                if(v>DOCPERPAGE)
+                /*if(v!=2)
                     continue;//TODO:JUST FOR DEBUG*/
                 /*bool ok=true;
                 for(int i=1;i<=10;++i)
@@ -245,6 +245,7 @@ class model
                 get_click_prob(sess,click_prob);
                 for(int i=1;i<=DOCPERPAGE;++i)
                 {
+                    //cerr<<click_prob[i]<<"\t";
                     logp=log(click_prob[i]);
                     log_likelihood+=logp;
                     if(logp>log(0.99999999999))
