@@ -77,6 +77,7 @@ class mcm:public model
             for(int round=1;round<=MAXROUND;++round)
             {
                 train_clear();
+                double maxdlt=0;
                 for(auto &sess:sessions)
                 {
                     if(sess.enable==false)
@@ -144,6 +145,9 @@ class mcm:public model
                 }
                 for(int i=0;i<docs.size();++i)
                 {
+                    maxdlt=max(maxdlt,fabs(alpha[i]-alpha1[i]/(alpha1[i]+alpha0[i])));
+                    maxdlt=max(maxdlt,fabs(s_c[i]-s_c1[i]/(s_c1[i]+s_c0[i])));
+                    maxdlt=max(maxdlt,fabs(s_e[i]-s_e1[i]/(s_e1[i]+s_e0[i])));
                     alpha[i]=alpha1[i]/(alpha1[i]+alpha0[i]);
                     s_c[i]=s_c1[i]/(s_c1[i]+s_c0[i]);
                     s_e[i]=s_e1[i]/(s_e1[i]+s_e0[i]);
@@ -152,21 +156,24 @@ class mcm:public model
                 }
                 for(int i=0;i<=MAXVERTICLE;++i)
                 {
+                    maxdlt=max(maxdlt,fabs(beta[i]-beta1[i]/(beta0[i]+beta1[i])));
                     beta[i]=beta1[i]/(beta0[i]+beta1[i]);
                     //cerr<<i<<"\t"<<beta[i]<<"\t"<<beta0[i]<<"\t"<<beta1[i]<<endl;
                 }
                 for(int i=0;i<=DOCPERPAGE;++i)
                     for(int j=0;j<=i;++j)
                     {
+                        maxdlt=max(maxdlt,fabs(gamma[i][j]-gamma1[i][j]/(gamma0[i][j]+gamma1[i][j])));
                         gamma[i][j]=gamma1[i][j]/(gamma0[i][j]+gamma1[i][j]);
-                        assert(gamma[i][j]<1&&gamma[i][j]>0);
+                        //assert(gamma[i][j]<1&&gamma[i][j]>0);
                     }
                 now_ll=this->test(false,3);
                 //now_LL2=this->test(false,2);
                 //now_LL1=this->test(false,1);
-                cerr<<"Round:\t"<<round<<"\tLL:\t"<<now_ll<<endl;
-                if(round%10==0)
-                    cerr<<"Test:\t"<<test(false,2)<<endl;
+                if(round%50==0)
+                    cerr<<"Round:\t"<<round<<"\tLL:\t"<<now_ll<<"\t"<<maxdlt<<endl;
+                /*if(round%10==0)
+                    cerr<<"Test:\t"<<test(false,2)<<endl;*/
                 if(now_ll-1e-8<last_ll)
                     break;
                 last_ll=now_ll;

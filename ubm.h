@@ -39,6 +39,7 @@ class ubm:public model
             double p0,cpb[20];
             for(rnd=1;rnd<=MAXROUND;++rnd)
             {
+                double maxdlt=-0.1;
                 for(int i=0;i<docs.size();++i)
                 {
                     doc_rel0[i]=0.5;//FOR SMOOTH
@@ -103,17 +104,21 @@ class ubm:public model
                     }
                 }*/
                 for(int i=0;i<docs.size();++i)
+                {
+                    maxdlt=max(maxdlt,fabs(doc_rel[i]-doc_rel0[i]/doc_rel1[i]));
                     doc_rel[i]=doc_rel0[i]/doc_rel1[i];
+                }
                 for(int i=1;i<=DOCPERPAGE;++i)
                 {
                     for(int j=1;j<=i;++j)
                     {
+                        maxdlt=max(maxdlt,fabs(gamma[i][j]-gamma0[i][j]/gamma1[i][j]));
                         gamma[i][j]=gamma0[i][j]/gamma1[i][j];
                     }
                 }
                 double now_LL,now_LL2,now_LL1;
-                now_LL=this->test(false,1);//ERROR
-                cerr<<"Round = "<<rnd<<"\tVali = "<<now_LL<<"\t"<<gamma[4][2]<<endl;
+                now_LL=this->test(false,3);//ERROR
+                cerr<<"Round = "<<rnd<<"\tVali = "<<now_LL<<"\t"<<maxdlt<<endl;
                 //now_LL2=this->test(false,2);
                 //now_LL1=this->test(false,1);
                 /*if(now_LL-1e-8<last_LL)
