@@ -58,6 +58,12 @@ class ubm:public model
                         continue;
                     if(!istrain(sess,sess_cnt))
                         continue;
+                    /*int c=0;
+                    for(int sp=1;sp<=DOCPERPAGE;++sp)
+                        if(sess.click_time[sp]>.1)
+                            ++c;
+                    if(c<=1)
+                        continue;//JUST FOR DEBUG*/
                     /*get_click_prob(sess,cpb);
                     p0=1.;
                     for(int i=1;i<=DOCPERPAGE;++i)

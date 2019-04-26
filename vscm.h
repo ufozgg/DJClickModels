@@ -9,7 +9,7 @@ class vscm:public model
         //alpha_cnt=train_cnt
         vector<double> alpha,s_c,calpha,cs_c;
         vector<vector<double>> phi,sigma,cphi,csigma;
-        double dlt=0.1,ddlt=0.9,eps=1e-6;
+        double dlt=0.5,ddlt=0.8,eps=1e-6;
         vector<int> first_vertical;
         void train_init()
         {
@@ -169,6 +169,12 @@ class vscm:public model
                     ++sess_cnt;
                     if(!istrain(sess,sess_cnt))//在没有Overfit可能性的模型里应写作istest，在需要验证集的模型里应写作!istrain
                         continue;
+                    /*int c=0;
+                    for(int sp=1;sp<=DOCPERPAGE;++sp)
+                        if(sess.click_time[sp]>.1)
+                            ++c;
+                    if(c<=1)
+                        continue;//JUST FOR DEBUG*/
                     if(first_vertical[i]<=1)
                     {
                         calc_sess(sess,1,1);

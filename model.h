@@ -225,7 +225,13 @@ class model
                 ++sess_cnt;
                 if(sess.kind!=kind||(type!=-1&&type!=sess.type))
                     continue;
-                int v;
+                /*int c=0;
+                for(int sp=1;sp<=DOCPERPAGE;++sp)
+                    if(sess.click_time[sp]>.1)
+                        ++c;
+                if(c<=1)
+                    continue;*/
+                /*int v;
                 for(v=1;v<=DOCPERPAGE;++v)
                     if(docs[sess.doc_id[v]].type>1)
                         break;
