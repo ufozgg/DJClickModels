@@ -5,11 +5,11 @@ class vscm:public model
 {
     public:
         double forward[DOCPERPAGE+2][2],backward[DOCPERPAGE+2][2];
-        double gamma[DOCPERPAGE+2][DOCPERPAGE+2][DOCPERPAGE+2],cgamma[DOCPERPAGE+2][DOCPERPAGE+2][DOCPERPAGE+2];
+        double gamma[DOCPERPAGE*2+2][DOCPERPAGE+2][DOCPERPAGE+2],cgamma[DOCPERPAGE*2+2][DOCPERPAGE+2][DOCPERPAGE+2];
         //alpha_cnt=train_cnt
         vector<double> alpha,s_c,calpha,cs_c;
         vector<vector<double>> phi,sigma,cphi,csigma;
-        double dlt=0.5,ddlt=0.8,eps=1e-6;
+        double dlt=0.2,ddlt=0.9,eps=1e-6;
         vector<int> first_vertical;
         void train_init()
         {
@@ -34,7 +34,7 @@ class vscm:public model
             }/*
             for(int i=0;i<=DOCPERPAGE+1;++i)
                 cerr<<vc[i]<<"\t";*/
-            for(int k=0;k<=DOCPERPAGE;++k)
+            for(int k=0;k<=DOCPERPAGE*2;++k)
             for(int i=0;i<=DOCPERPAGE;++i)
                 for(int j=0;j<=DOCPERPAGE;++j)
                     gamma[k][i][j]=0.5;
@@ -74,7 +74,7 @@ class vscm:public model
                 calpha[i]=pr*(1./alpha[i]-1./(1.-alpha[i]));
                 cs_c[i]=pr*(1./s_c[i]-1./(1.-s_c[i]));
             }
-            for(int k=0;k<=DOCPERPAGE;++k)
+            for(int k=0;k<=DOCPERPAGE*2;++k)
             for(int i=0;i<=DOCPERPAGE;++i)
                 for(int j=0;j<=DOCPERPAGE;++j)
                     cgamma[k][i][j]=pr*(1./gamma[k][i][j]-1./(1.-gamma[k][i][j]));
@@ -89,6 +89,12 @@ class vscm:public model
                         phi[i][j]=min(1.0-eps,phi[i][j]+dlt);
                     if(cphi[i][j]<-eps)
                         phi[i][j]=max(eps,phi[i][j]-dlt);/**/
+                    //if(csigma)
+                    //sigma[i][j]=0;
+                    if(csigma[i][j]>eps)
+                        sigma[i][j]=min(1.0-eps,sigma[i][j]+dlt);
+                    if(csigma[i][j]<-eps)
+                        sigma[i][j]=max(eps,sigma[i][j]-dlt);/**/
                 }
             for(int i=0;i<docs.size();++i)
             {
@@ -101,7 +107,7 @@ class vscm:public model
                 if(cs_c[i]<-eps)
                     s_c[i]=max(eps,s_c[i]-dlt);
             }
-            for(int k=0;k<=DOCPERPAGE;++k)
+            for(int k=0;k<=DOCPERPAGE*2;++k)
             for(int i=0;i<=DOCPERPAGE;++i)
                 for(int j=0;j<=DOCPERPAGE;++j)
                 {
@@ -180,13 +186,13 @@ class vscm:public model
                         calc_sess(sess,1,1);
                         continue;
                     }
-                    double ptot,p1,p2;
-                    auto newsess=sess;
+                    double ptot,p1,p2,p3;
+                    auto newsess=sess;//4123 5678
                     newsess.id=-newsess.id;
                     get_prob(sess,1);
                     p1=forward[DOCPERPAGE][0]+forward[DOCPERPAGE][1];
                     int &v=first_vertical[i];
-                    for(int j=first_vertical[i];j>1;--j)
+                    for(int j=v;j>1;--j)
                     {
                         newsess.doc_id[j]=sess.doc_id[j-1];
                         newsess.click_time[j]=sess.click_time[j-1];
@@ -197,20 +203,30 @@ class vscm:public model
                     newsess.click_time[1]=sess.click_time[v];
                     newsess.nex_sess[1]=sess.nex_sess[v];
                     newsess.nex_pos[1]=sess.nex_pos[v];
-                    /*for(int j=first_vertical[i];j;--j)
-                    {
-                        newsess.doc_id[first_vertical[i]-j+1]=sess.doc_id[j];
-                        newsess.click_time[first_vertical[i]-j+1]=sess.click_time[j];
-                        newsess.nex_sess[first_vertical[i]-j+1]=sess.nex_sess[j];
-                        newsess.nex_pos[first_vertical[i]-j+1]=sess.nex_pos[j];
-                    }*/
-                    get_prob(newsess,first_vertical[i]);
+                    get_prob(newsess,v);
                     p2=forward[DOCPERPAGE][0]+forward[DOCPERPAGE][1];
-                    double ph=phi[first_vertical[i]][docs[newsess.doc_id[1]].type];
-                    ptot=ph*p2+(1.-ph)*p1;
-                    calc_sess(newsess,ph*p2/ptot,first_vertical[i]);
+                    
+                    auto newsess2=sess;//4321 5678
+                    newsess2.id+=sessions.size();
+                    for(int j=v;j;--j)
+                    {
+                        newsess2.doc_id[v-j+1]=sess.doc_id[j];
+                        newsess2.click_time[v-j+1]=sess.click_time[j];
+                        newsess2.nex_sess[v-j+1]=sess.nex_sess[j];
+                        newsess2.nex_pos[v-j+1]=sess.nex_pos[j];
+                    }
+                    double ph=phi[v][docs[sess.doc_id[v]].type],sg=sigma[v][docs[sess.doc_id[v]].type];
+                    //cerr<<sg<<"\t"<<v<<"\t"<<docs[sess.doc_id[v]].type<<endl;
+                    //assert(round==1||sg<1e-4);
+                    get_prob(newsess2,v==2?2:DOCPERPAGE+v);
+                    p3=forward[DOCPERPAGE][0]+forward[DOCPERPAGE][1];
+
+                    ptot=ph*sg*p3+ph*(1.-sg)*p2+(1.-ph)*p1;
+                    calc_sess(newsess2,ph*sg*p3/ptot,v+DOCPERPAGE);
+                    calc_sess(newsess,ph*(1.-sg)*p2/ptot,v);
                     calc_sess(sess,(1.-ph)*p1/ptot,1);
-                    cphi[first_vertical[i]][docs[newsess.doc_id[1]].type]+=(p2-p1)/ptot;
+                    cphi[v][docs[sess.doc_id[v]].type]+=(p2*(1.-sg)+p3*sg-p1)/ptot;
+                    csigma[v][docs[sess.doc_id[v]].type]+=ph*(p3-p2)/ptot;
                 }
                 train_update();
                 now_ll=this->test(false,3);
@@ -237,10 +253,10 @@ class vscm:public model
         void get_prob(Session &sess,int k)
         {
             if(k>DOCPERPAGE)k=0;
-            static int last_calc_sess=-1;
+            /*static int last_calc_sess=-1;
             if(sess.id==last_calc_sess)
                 return;
-            last_calc_sess=sess.id;
+            last_calc_sess=sess.id;*/
             memset(forward,0,sizeof(forward));//alpha
             memset(backward,0,sizeof(backward));//beta
             forward[0][0]=1.0;
@@ -311,7 +327,7 @@ class vscm:public model
         {
             //click_prob[i]=P(C_i|C_1,C_2,...C_{i-1})
             //examination = P(E_k|C_1,C_2,...C_{k-1})
-            double s_prob=0.0,ph;
+            double s_prob=0.0,ph,sg;
             int v;
             double tmp[DOCPERPAGE+2];
             for(int i=0;i<=DOCPERPAGE;++i)
@@ -327,15 +343,10 @@ class vscm:public model
                 return;
             }
             ph=phi[v][docs[sess.doc_id[v]].type];
-            get_seq_clp(sess,click_prob,1-ph,1);
-            Session newsess=sess;
-            /*for(int j=v;j;--j)
-            {
-                newsess.doc_id[v-j+1]=sess.doc_id[j];
-                newsess.click_time[v-j+1]=sess.click_time[j];
-                newsess.nex_sess[v-j+1]=sess.nex_sess[j];
-                newsess.nex_pos[v-j+1]=sess.nex_pos[j];
-            }*/
+            sg=sigma[v][docs[sess.doc_id[v]].type];
+            get_seq_clp(sess,click_prob,(1-ph),1);
+            Session newsess=sess;//4123 56789
+            
             newsess.id=-newsess.id;
             for(int j=v;j>1;--j)
             {
@@ -348,20 +359,26 @@ class vscm:public model
             newsess.click_time[1]=sess.click_time[v];
             newsess.nex_sess[1]=sess.nex_sess[v];
             newsess.nex_pos[1]=sess.nex_pos[v];
-            get_seq_clp(newsess,tmp,ph,v);
-            //*
+            get_seq_clp(newsess,tmp,ph*(1.-sg),v);
             for(int h=v+1;h<=DOCPERPAGE;++h)
                 click_prob[h]+=tmp[h];
             for(int h=1;h<v;++h)
                 click_prob[h]+=tmp[h+1];
-            click_prob[v]+=tmp[1];/**/
-            /*
-            for(int j=1;j<=DOCPERPAGE;++j)
-                click_prob[j]+=tmp[j];/**/
-            /*for(int j=v;j;--j)
-                click_prob[j]+=tmp[v-j+1];
-            for(int j=v+1;j<=DOCPERPAGE;++j)
-                click_prob[j]+=tmp[j];*/
+            click_prob[v]+=tmp[1];
+            Session newsess2=sess;//4321 56789
+            newsess2.id+=sessions.size();
+            for(int j=v;j;--j)
+            {
+                newsess2.doc_id[v-j+1]=sess.doc_id[j];
+                newsess2.click_time[v-j+1]=sess.click_time[j];
+                newsess2.nex_sess[v-j+1]=sess.nex_sess[j];
+                newsess2.nex_pos[v-j+1]=sess.nex_pos[j];
+            }
+            get_seq_clp(newsess2,tmp,ph*sg,v==2?2:DOCPERPAGE+v);
+            for(int h=1;h<=v;++h)
+                click_prob[h]+=tmp[v-h+1];
+            for(int h=v+1;h<=DOCPERPAGE;++h)
+                click_prob[h]+=tmp[h];
         }
 };
 #endif
