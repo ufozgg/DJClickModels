@@ -11,7 +11,8 @@ class vcmlayout:public model
         vector<int> train_tim;
         vector<int> doc_cnt;
         double protect[10];//={1e-4,0.2,0.1,0.07,0.04};
-        double delta=0.1,dlt=0.9,eps=1e-3;
+        double delta=0.1,dlt=0.9;
+        const double eps=1e-3,meps=1e-3;
         void init()
         {
             int i,j;
@@ -126,7 +127,7 @@ class vcmlayout:public model
                 {
                     update_num(alpha[i],calpha[i]);
                     update_num(beta[i],cbeta[i]);
-                    update_num(cita[i],ccita[i],-1,1);
+                    update_num(cita[i],ccita[i],-.5,.5);
                     //cita[i]=0;
                 }
                 for(int s=0;s<=DOCPERPAGE;++s)
@@ -310,12 +311,12 @@ class vcmlayout:public model
             }
             ++num;
         }
-        double rge(const double x)
+        double rge(const double x,double neps=1e-3)
         {
-            if(x<eps)
-                return eps;
-            if(x>1.-eps)
-                return 1.-eps;
+            if(x<neps)
+                return neps;
+            if(x>1.-neps)
+                return 1.-neps;
             return x;
         }
         void train()
@@ -465,12 +466,12 @@ class vcmlayout:public model
             {
                 if(sess.click_time[i]>.1)
                 {
-                    click_prob[i]=c1*(rge(beta[sess.doc_id[i]])*rge(gamma[v][1][num][num-last_clkk]+cita[sess.doc_id[i]]));
+                    click_prob[i]=c1*(rge(beta[sess.doc_id[i]])*rge(gamma[v][1][num][num-last_clkk]+cita[sess.doc_id[i]],meps));
                     last_clkk=num;
                 }
                 else
                 {
-                    click_prob[i]=c1*(1.-rge(beta[sess.doc_id[i]])*rge(gamma[v][1][num][num-last_clkk]+cita[sess.doc_id[i]]));
+                    click_prob[i]=c1*(1.-rge(beta[sess.doc_id[i]])*rge(gamma[v][1][num][num-last_clkk]+cita[sess.doc_id[i]],meps));
                 }
                 ++num;
             }
@@ -478,12 +479,12 @@ class vcmlayout:public model
             {
                 if(sess.click_time[i]>.1)
                 {
-                    click_prob[i]=c1*(rge(beta[sess.doc_id[i]])*rge(gamma[v][1][num][num-last_clkk]+cita[sess.doc_id[i]]));
+                    click_prob[i]=c1*(rge(beta[sess.doc_id[i]])*rge(gamma[v][1][num][num-last_clkk]+cita[sess.doc_id[i]],meps));
                     last_clkk=num;
                 }
                 else
                 {
-                    click_prob[i]=c1*(1.-rge(beta[sess.doc_id[i]])*rge(gamma[v][1][num][num-last_clkk]+cita[sess.doc_id[i]]));
+                    click_prob[i]=c1*(1.-rge(beta[sess.doc_id[i]])*rge(gamma[v][1][num][num-last_clkk]+cita[sess.doc_id[i]],meps));
                 }
                 ++num;
             }
@@ -493,12 +494,12 @@ class vcmlayout:public model
             i=v;
             if(sess.click_time[i]>.1)
             {
-                click_prob[i]+=c2*(rge(beta[sess.doc_id[i]])*rge(gamma[v][0][num][num-last_clkk]+cita[sess.doc_id[i]]));
+                click_prob[i]+=c2*(rge(beta[sess.doc_id[i]])*rge(gamma[v][0][num][num-last_clkk]+cita[sess.doc_id[i]],meps));
                 last_clkk=num;
             }
             else
             {
-                click_prob[i]+=c2*(1.-rge(beta[sess.doc_id[i]])*rge(gamma[v][0][num][num-last_clkk]+cita[sess.doc_id[i]]));
+                click_prob[i]+=c2*(1.-rge(beta[sess.doc_id[i]])*rge(gamma[v][0][num][num-last_clkk]+cita[sess.doc_id[i]],meps));
             }
             ++num;
             for(i=1;i<=DOCPERPAGE;++i)
@@ -506,12 +507,12 @@ class vcmlayout:public model
                 {
                     if(sess.click_time[i]>.1)
                     {
-                        click_prob[i]+=c2*(rge(beta[sess.doc_id[i]])*rge(gamma[v][0][num][num-last_clkk]+cita[sess.doc_id[i]]));
+                        click_prob[i]+=c2*(rge(beta[sess.doc_id[i]])*rge(gamma[v][0][num][num-last_clkk]+cita[sess.doc_id[i]],meps));
                         last_clkk=num;
                     }
                     else
                     {
-                        click_prob[i]+=c2*(1.-rge(beta[sess.doc_id[i]])*rge(gamma[v][0][num][num-last_clkk]+cita[sess.doc_id[i]]));
+                        click_prob[i]+=c2*(1.-rge(beta[sess.doc_id[i]])*rge(gamma[v][0][num][num-last_clkk]+cita[sess.doc_id[i]],meps));
                     }
                     ++num;
                 }

@@ -337,4 +337,70 @@ void data_mining()
     }
     cout<<"========================="<<endl;
     #endif
+	#ifdef FIRSTCLK
+	int i,j;
+	int fir_clk[20][5],cnt[20];
+	memset(fir_clk,0,sizeof(fir_clk));
+	memset(cnt,0,sizeof(cnt));
+	for(auto &sess:sessions)
+		if(sess.enable)
+		{
+			int clk_pla=0;
+			double clk_time=1e18;
+			for(int i=1;i<=4;++i)
+				if(sess.click_time[i]>.1&&sess.click_time[i]<clk_time)
+				{
+					clk_time=sess.click_time[i];
+					clk_pla=i;
+				}
+			int ver=0;
+			for(int i=1;i<=4;++i)
+			{
+				ver<<=1;
+				if(docs[sess.doc_id[i]].type!=1)
+					ver|=1;
+			}
+			if(clk_pla<=1)
+				continue;
+			for(int i=1;i<=10;++i)
+				if(sess.click_time[i]>.1&&clk_pla==i)
+					++fir_clk[ver][min(4,i)];
+			//++fir_clk[ver][clk_pla];
+			++cnt[ver];
+		}
+	for(i=0;i<20;++i)
+		if(cnt[i]>100)
+		{
+			for(j=3;~j;--j)
+				if(i&(1<<j))
+					cerr<<"1";
+				else
+					cerr<<"0";
+			cerr<<"\t"<<cnt[i];
+			for(j=0;j<5;++j)
+				cerr<<"\t"<<1.*fir_clk[i][j]/cnt[i];
+			cerr<<endl;
+		}
+	#endif
+	#ifdef CLKSEQ
+	int cnt[20][2][2][2]={};
+	for(auto &sess:sessions)
+		if(sess.enable)
+		{
+			for(int i=1;i<=8;++i)
+				if(sess.click_time[i]>.1&&sess.click_time[i+2]>.1)
+				{
+					++cnt[i][docs[sess.doc_id[i]].type>1][docs[sess.doc_id[i+2]].type>1][sess.click_time[i]>sess.click_time[i+2]];
+				}
+		}
+	int i,j,k,s;
+	for(i=1;i<=8;++i)
+	{
+		for(j=0;j<=1;++j)
+		for(k=0;k<=1;++k)
+		for(s=0;s<=1;++s)
+			cerr<<cnt[i][j][k][s]<<"\t";
+		cerr<<endl;
+	}
+	#endif
 }

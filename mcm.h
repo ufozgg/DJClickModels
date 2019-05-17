@@ -85,6 +85,12 @@ class mcm:public model
                     ++sess_cnt;
                     if(!istrain(sess,sess_cnt))//在没有Overfit可能性的模型里应写作istest，在需要验证集的模型里应写作!istrain
                         continue;
+                    /*int c=0;
+                    for(int sp=1;sp<=DOCPERPAGE;++sp)
+                        if(sess.click_time[sp]>.1)
+                            ++c;
+                    if(c<=1)
+                        continue;//JUST FOR DEBUG*/
                     get_prob(sess);
                     last_clk=0;
                     double prob_cs=forward[DOCPERPAGE][0]+forward[DOCPERPAGE][1];
@@ -170,7 +176,7 @@ class mcm:public model
                 now_ll=this->test(false,3);
                 //now_LL2=this->test(false,2);
                 //now_LL1=this->test(false,1);
-                if(round%50==0)
+                //if(round%50==0)
                     cerr<<"Round:\t"<<round<<"\tLL:\t"<<now_ll<<"\t"<<maxdlt<<endl;
                 /*if(round%10==0)
                     cerr<<"Test:\t"<<test(false,2)<<endl;*/
@@ -178,6 +184,9 @@ class mcm:public model
                     break;*/
                 last_ll=now_ll;
             }
+            for(int i=1;i<=MAXVERTICLE;++i)
+                cerr<<beta[i]<<",";
+            cerr<<endl;
 
             FILE* outfile=fopen("../output/mcm2_args","w");
             assert(outfile);

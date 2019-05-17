@@ -8,7 +8,7 @@ class mcm_sgd:public model
         double gamma[DOCPERPAGE+2][DOCPERPAGE+2],cgamma[DOCPERPAGE+2][DOCPERPAGE+2];
         //alpha_cnt=train_cnt
         vector<double> alpha,beta,s_c,s_e,calpha,cbeta,cs_c,cs_e;
-        double dlt=0.1,ddlt=0.9,eps=1e-6;
+        double dlt=0.5,ddlt=0.8,eps=1e-9;
         void train_init()
         {
             name="Mcm-sgd";
@@ -140,12 +140,15 @@ class mcm_sgd:public model
                     }
                 }
                 train_update();
-                now_ll=this->test(false,3);
+                now_ll=this->test(false,2);
                 //if(round%20==0)
                     cerr<<"Round:\t"<<round<<"\tLL:\t"<<now_ll<<"\t"<<dlt<<endl;
                 last_ll=now_ll;
                 dlt*=ddlt;
             }
+            for(int i=1;i<=MAXVERTICLE;++i)
+                cerr<<beta[i]<<",";
+            cerr<<endl;
             /*for(int i=1;i<=DOCPERPAGE;++i)
             {
                 for(int j=1;j<=i;++j)
