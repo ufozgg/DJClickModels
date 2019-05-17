@@ -31,6 +31,9 @@ Don't use after 2027A.D.
 #include"load_query_list.h"
 #include"data_mining.h"
 using namespace std;
+vector<bool> gammaenable=vector<bool>{0,1,1,0,1,1};
+vector<bool> phienable=vector<bool>{0,1,1};
+vector<bool> sigmaenable=vector<bool>{0,1,1};
 int main(int argc,char* argv[])
 {
 	cmdline::parser pa;
@@ -51,6 +54,24 @@ int main(int argc,char* argv[])
 	pa.add<std::string>("sessioncount",'c',"when filter good sessions",false,"1000000000");
 	pa.add<std::string>("divide",'d',"divide",false,"0.0");
 	pa.add<std::string>("usetrained",'u',"if true ,not train ,load args from file",false,"false");
+	pa.add<std::string>("enable",'e',"args for mvcm",false,"111111111");
+	for(int i=0;i<6;++i)
+		if(pa.get<std::string>("enable")[i]=='0')
+			gammaenable[i]=0;
+		else
+			gammaenable[i]=1;
+	for(int i=0;i<3;++i)
+		if(pa.get<std::string>("enable")[i+6]=='0')
+		{
+			phienable[i]=0;
+			sigmaenable[i]=0;
+		}
+		else
+		{
+			phienable[i]=1;
+			sigmaenable[i]=1;
+		}
+		
 	//pa.add<std::string>("data",'d',"load data from,default from ../data/part-r-xxxxx",false,"",cmdline::oneof<std::string>("ubm"));
 	pa.parse_check(argc,argv);
 	std::cerr<<pa.get<std::string>("module")<<endl; 

@@ -1,6 +1,9 @@
 #ifndef MVCM_SGD_H
 #define MVCM_SGD_H
 //#define double long double
+extern vector<bool> gammaenable;
+extern vector<bool> phienable;
+extern vector<bool> sigmaenable;
 class mvcm:public model
 {
     public:
@@ -9,9 +12,6 @@ class mvcm:public model
         vector<double> sigma,csigma;
         vector<int> arggamma,argphi,argsigma;
         vector<double> alpha,s_c,calpha,cs_c;
-        const vector<bool> gammaenable=vector<bool>{0,1,1,0,1,1};
-        const vector<bool> phienable=vector<bool>{0,1,1};
-        const vector<bool> sigmaenable=vector<bool>{0,1,1};
         double dlt=0.2,ddlt=0.9,eps=1e-6;
         vector<int> first_vertical;
         double pr=1;
