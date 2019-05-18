@@ -4,6 +4,7 @@
 extern vector<bool> gammaenable;
 extern vector<bool> phienable;
 extern vector<bool> sigmaenable;
+extern double pr;
 class mvcm:public model
 {
     public:
@@ -14,7 +15,6 @@ class mvcm:public model
         vector<double> alpha,s_c,calpha,cs_c;
         double dlt=0.2,ddlt=0.9,eps=1e-6;
         vector<int> first_vertical;
-        double pr=1;
         void train_init()
         {
             name="MVCM";
@@ -62,7 +62,7 @@ class mvcm:public model
         }
         bool is_vertical(int &x)
         {
-            return docs[x].type>1;
+            return docs[x].type>1&&docs[x].type<9||docs[x].type==10||docs[x].type==14||docs[x].type==15;
         }
         void clear_vec(vector<double> &arg,vector<double> &dt)
         {
@@ -200,7 +200,6 @@ class mvcm:public model
                     backward[i][1]=backward[i+1][1];
                     backward[i][0]=backward[i+1][0]*(1.-getgamma({st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i,last_clk[i]})*alpha[sess.doc_id[pos_in_sess[i]]]);
                 }
-            
             if(!upd)
                 return ret;
             if(ret<eps)
@@ -232,13 +231,26 @@ class mvcm:public model
                 {
                     exam=forward[i-1][0]/(forward[i-1][0]+forward[i-1][1]);
                     //click_rate[pos_in_sess[i]]+=exam*(1.-getgamma((st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i))*alpha[sess.doc_id[pos_in_sess[i]]]);
-                    addcgamma({st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i,last_clk[i]},-alpha[sess.doc_id[pos_in_sess[i]]]*ret/tot_p/(1.-getgamma({st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i,last_clk[i]})*alpha[sess.doc_id[pos_in_sess[i]]]));
-                    calpha[sess.doc_id[pos_in_sess[i]]]+=-getgamma({st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i,last_clk[i]})*ret/tot_p/(1.-getgamma({st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i,last_clk[i]})*alpha[sess.doc_id[pos_in_sess[i]]]);
+                    addcgamma({st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i,last_clk[i]},-alpha[sess.doc_id[pos_in_sess[i]]]/tot_p*prob*(forward[i-1][0]*backward[i+1][0]));
+                    calpha[sess.doc_id[pos_in_sess[i]]]+=-getgamma({st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i,last_clk[i]})/tot_p*prob*(forward[i-1][0]*backward[i+1][0]);
                 }
         }
         //UPD:cphi+=dphi*p_now/tot_p
         double dfs(int now,double prob,Session &sess,bool upd=0)
         {
+            /*/Only first one
+            if(now>1)
+            {
+                for(int i=ver_pos[1]+1;i<=DOCPERPAGE;++i)
+                {
+                    st[i]=ver_pos[1];
+                    en[i]=DOCPERPAGE+1;
+                    pos_in_sess[i]=i;
+                    way[i]=0;
+                }
+                return calc_seq_prob(prob,sess,upd);
+            }
+            //Only first one*/
             if(now==ver_pos.size())
             {
                 for(int i=ver_pos[now-1]+1;i<=DOCPERPAGE;++i)

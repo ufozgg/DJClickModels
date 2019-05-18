@@ -34,6 +34,7 @@ using namespace std;
 vector<bool> gammaenable=vector<bool>{0,1,1,0,1,1};
 vector<bool> phienable=vector<bool>{0,1,1};
 vector<bool> sigmaenable=vector<bool>{0,1,1};
+double pr;
 int main(int argc,char* argv[])
 {
 	cmdline::parser pa;
@@ -55,6 +56,9 @@ int main(int argc,char* argv[])
 	pa.add<std::string>("divide",'d',"divide",false,"0.0");
 	pa.add<std::string>("usetrained",'u',"if true ,not train ,load args from file",false,"false");
 	pa.add<std::string>("enable",'e',"args for mvcm",false,"111111111");
+	pa.add<std::string>("pr",'p',"smooth val",false,"1.0");
+	pa.parse_check(argc,argv);
+	pr=stod(pa.get<std::string>("pr"));
 	for(int i=0;i<6;++i)
 		if(pa.get<std::string>("enable")[i]=='0')
 			gammaenable[i]=0;
@@ -73,7 +77,6 @@ int main(int argc,char* argv[])
 		}
 		
 	//pa.add<std::string>("data",'d',"load data from,default from ../data/part-r-xxxxx",false,"",cmdline::oneof<std::string>("ubm"));
-	pa.parse_check(argc,argv);
 	std::cerr<<pa.get<std::string>("module")<<endl; 
 	std::cerr<<pa.get<std::string>("save")<<endl;
 	std::cerr<<pa.get<std::string>("load")<<endl;
