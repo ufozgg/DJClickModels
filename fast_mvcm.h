@@ -1,20 +1,18 @@
-#ifndef MVCM_SGD_H
-#define MVCM_SGD_H
+#ifndef FMVCM_SGD_H
+#define FMVCM_SGD_H
 //#define double long double
 extern vector<bool> gammaenable;
 extern vector<bool> phienable;
 extern vector<bool> sigmaenable;
 extern double pr;
-class mvcm:public model
+class fmvcm:public model
 {
     public:
-        vector<double> gamma,cgamma;
-        vector<double> phi,cphi;
-        vector<double> sigma,csigma;
-        vector<int> arggamma,argphi,argsigma;
         vector<double> alpha,s_c,calpha,cs_c;
         double dlt=0.2,ddlt=0.9,eps=1e-6;
         vector<int> first_vertical;
+        double phi[DOCPERPAGE+2][MAXVERTICLE+2],cphi[DOCPERPAGE+2][MAXVERTICLE+2];
+        double sigma[DOCPERPAGE+2][MAXVERTICLE+2],csigma[DOCPERPAGE+2][MAXVERTICLE+2];
         void train_init()
         {
             name="MVCM";
@@ -28,37 +26,19 @@ class mvcm:public model
             {
                 alpha[i]=s_c[i]=0.5;
             }
-            argphi=vector<int>{DOCPERPAGE+2,DOCPERPAGE+2,MAXVERTICLE+2};/*上一个Vertical的位置（没有则记为0），当前Vertical的位置，当前Vertical类型*/
-            argsigma=vector<int>{DOCPERPAGE+2,DOCPERPAGE+2,MAXVERTICLE+2};/*上一个Vertical的位置（没有则记为0），当前Vertical的位置，当前Vertical类型*/
-            arggamma=vector<int>{DOCPERPAGE+2,DOCPERPAGE+2,MAXVERTICLE+2,4,DOCPERPAGE+2,DOCPERPAGE+2};/*上一个Vertical的位置（没有则记为0），当前Vertical的位置，当前Vertical类型，当前顺序，结果位置，上一个点击位置*/
-            int siz;
-            siz=1;
-            for(auto i:arggamma)
-                siz*=i;
-            gamma.resize(siz+2);
-            cgamma.resize(siz+2);
-            siz=1;
-            for(auto i:argsigma)
-                siz*=i;
-            sigma.resize(siz+2);
-            csigma.resize(siz+2);
-            siz=1;
-            for(auto i:argphi)
-                siz*=i;
-            phi.resize(siz+2);
-            cphi.resize(siz+2);
-            for(auto &i:gamma)
-                i=0.5;
-            for(auto &i:sigma)
-                i=0.5;
-            for(auto &i:phi)
-                i=0.5;
-            for(auto &i:cgamma)
-                i=0;
-            for(auto &i:csigma)
-                i=0;
-            for(auto &i:cphi)
-                i=0;
+            //argphi=vector<int>{DOCPERPAGE+2,DOCPERPAGE+2,MAXVERTICLE+2};/*上一个Vertical的位置（没有则记为0），当前Vertical的位置，当前Vertical类型*/
+            //argsigma=vector<int>{DOCPERPAGE+2,DOCPERPAGE+2,MAXVERTICLE+2};/*上一个Vertical的位置（没有则记为0），当前Vertical的位置，当前Vertical类型*/
+            //arggamma=vector<int>{DOCPERPAGE+2,DOCPERPAGE+2,MAXVERTICLE+2,4,DOCPERPAGE+2,DOCPERPAGE+2};/*上一个Vertical的位置（没有则记为0），当前Vertical的位置，当前Vertical类型，当前顺序，结果位置，上一个点击位置*/
+            /*对于phi和sigma保留前2维
+            对于gamma保留2、5、6
+            */
+            for(i=0;i<=DOCPERPAGE;++i)
+                for(j=0;j<=MAXVERTICLE;++j)
+                {
+                    phi[i][j]=sigma[i][j]=0.5;
+                    cphi[i][j]=csigma[i][j]=0;
+                }
+            /*GAMMA*/
         }
         bool is_vertical(int &x)
         {
@@ -76,9 +56,21 @@ class mvcm:public model
         {
             clear_vec(alpha,calpha);
             clear_vec(s_c,cs_c);
-            clear_vec(sigma,csigma);
-            clear_vec(gamma,cgamma);
-            clear_vec(phi,cphi);
+            for(int i=0;i<=DOCPERPAGE;++i)
+                for(int j=0;j<=MAXVERTICLE;++j)
+                {
+                    cphi[i][j]=pr*(1./phi[i][j]-1./(1.-phi[i][j]));
+                    csigma[i][j]=pr*(1./sigma[i][j]-1./(1.-sigma[i][j]));
+                }
+        }
+        void update_val(double &arg,double &dt)
+        {
+            if(dt>eps)
+                arg=min(1.-eps,arg+dt);
+            else
+            {
+                arg=max(eps,arg-dt);
+            }
         }
         void update_vec(vector<double> &arg,vector<double> &dt)
         {
@@ -95,68 +87,19 @@ class mvcm:public model
         {
             update_vec(alpha,calpha);
             update_vec(s_c,cs_c);
-            update_vec(sigma,csigma);
-            update_vec(gamma,cgamma);
-            update_vec(phi,cphi);
+            for(int i=0;i<=DOCPERPAGE;++i)
+                for(int j=0;j<=MAXVERTICLE;++j)
+                {
+                    update_val(phi[i][j],cphi[i][j]);
+                    update_val(sigma[i][j],csigma[i][j]);
+                }
         }
         double click_rate[DOCPERPAGE+2],forward[DOCPERPAGE+2][2],backward[DOCPERPAGE+2][2];
         /*顺序0：1234，顺序1：4123，顺序2：4321*/
         int view_len[DOCPERPAGE+2];
-        int phiid(const vector<int> &idx)
-        {
-            assert(idx.size()==argphi.size());
-            int tid=0;
-            for(int i=0;i<idx.size();++i)
-                if(phienable[i])
-                    tid=tid*argphi[i]+idx[i];
-            return tid;
-        }
-        double getphi(const vector<int> &idx)
-        {
-            return phi[phiid(idx)];
-        }
-        double addcphi(const vector<int> &idx,double v)
-        {
-            cphi[phiid(idx)]+=v;
-        }
-        int sigmaid(const vector<int> &idx)
-        {
-            assert(idx.size()==argsigma.size());
-            int tid=0;
-            for(int i=0;i<idx.size();++i)
-                if(sigmaenable[i])
-                    tid=tid*argsigma[i]+idx[i];
-            return tid;
-        }
-        double getsigma(const vector<int> &idx)
-        {
-            return sigma[sigmaid(idx)];
-        }
-        double addcsigma(const vector<int> &idx,double v)
-        {
-            csigma[sigmaid(idx)]+=v;
-        }
-        int gammaid(const vector<int> &idx)
-        {
-            assert(idx.size()==arggamma.size());
-            int tid=0;
-            for(int i=0;i<idx.size();++i)
-                if(gammaenable[i])
-                    tid=tid*arggamma[i]+idx[i];
-            return tid;
-        }
-        double getgamma(const vector<int> &idx)
-        {
-            return gamma[gammaid(idx)];
-        }
-        double addcgamma(const vector<int> &idx,double v)
-        {
-            cgamma[gammaid(idx)]+=v;
-        }
         int pos_in_sess[DOCPERPAGE+2],st[DOCPERPAGE+2],en[DOCPERPAGE+2],way[DOCPERPAGE+2];
         vector<int> ver_pos;
-        vector<int> dphi_id,dsigma_id;
-        vector<double> dphi,dsigma;
+        int dphi_id[DOCPERPAGE+2][2],dsigma_id[DOCPERPAGE+2][2];
         /*phi sigma 上一个Vertical的位置（没有则记为0），当前Vertical的位置，当前Vertical类型*/
         /*gamma 上一个Vertical的位置（没有则记为0），当前Vertical的位置，当前Vertical类型，当前顺序，结果位置，上一个点击位置*/
         double calc_seq_prob(double prob,Session &sess,bool upd)
