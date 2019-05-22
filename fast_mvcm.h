@@ -222,21 +222,23 @@ class fmvcm:public model
                 }
                 dphi_id[dphi_num][0]=ver_pos[now];
                 dphi_id[dphi_num][1]=docs[sess.doc_id[ver_pos[now]]].type;
-                dphi[dphi_num]=(-1./(1.-getphi({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type})));
+                dphi[dphi_num]=-1./(1.-phi[ver_pos[now]][docs[sess.doc_id[ver_pos[now]]].type]);
                 dsigma[dphi_num]=0;
                 ++dphi_num;
-                ret+=dfs(now+1,prob*(1.-getphi({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type})),sess,upd);
+                ret+=dfs(now+1,prob*(1.-phi[ver_pos[now]][docs[sess.doc_id[ver_pos[now]]].type]),sess,upd);
                 --dphi_num;
                 for(int i=ver_pos[now-1]+1;i<=ver_pos[now];++i)
                 {
                     pos_in_sess[i]=ver_pos[now-1]+ver_pos[now]-i+1;
                     way[i]=1;
                 }
-                dphi_id.push_back(1./phiid({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type}));//
-                dphi.push_back(1);
-                ret+=dfs(now+1,prob*getphi({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type}),sess,upd);
-                dphi_id.pop_back();
-                dphi.pop_back();
+                dphi_id[dphi_num][0]=ver_pos[now];
+                dphi_id[dphi_num][1]=docs[sess.doc_id[ver_pos[now]]].type;
+                dphi[dphi_num]=1./phi[ver_pos[now]][docs[sess.doc_id[ver_pos[now]]].type];
+                dsigma[dphi_num]=0;
+                ++dphi_num;
+                ret+=dfs(now+1,prob*phi[ver_pos[now]][docs[sess.doc_id[ver_pos[now]]].type],sess,upd);
+                --dphi_num;
                 return ret;
             }
             for(int i=ver_pos[now-1]+1;i<=ver_pos[now];++i)
@@ -244,25 +246,24 @@ class fmvcm:public model
                 pos_in_sess[i]=i;
                 way[i]=0;
             }
-            dphi_id.push_back(phiid({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type}));
-            dphi.push_back(-1./(1.-getphi({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type})));//
-            ret+=dfs(now+1,prob*(1.-getphi({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type})),sess,upd);
-            dphi_id.pop_back();
-            dphi.pop_back();
+            dphi_id[dphi_num][0]=ver_pos[now];
+            dphi_id[dphi_num][1]=docs[sess.doc_id[ver_pos[now]]].type;
+            dphi[dphi_num]=-1./(1.-phi[ver_pos[now]][docs[sess.doc_id[ver_pos[now]]].type]);
+            dsigma[dphi_num]=0;
+            ++dphi_num;
+            ret+=dfs(now+1,prob*(1.-phi[ver_pos[now]][docs[sess.doc_id[ver_pos[now]]].type]),sess,upd);
+            --dphi_num;
             for(int i=ver_pos[now-1]+1;i<=ver_pos[now];++i)
             {
                 pos_in_sess[i]=ver_pos[now-1]+ver_pos[now]-i+1;
                 way[i]=1;
             }
-            dphi_id.push_back(phiid({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type}));
-            dphi.push_back(1./getphi({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type}));//
-            dsigma_id.push_back(sigmaid({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type}));
-            dsigma.push_back(1./getsigma({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type}));//
-            ret+=dfs(now+1,prob*getphi({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type})*getsigma({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type}),sess,upd);
-            dphi_id.pop_back();
-            dphi.pop_back();
-            dsigma_id.pop_back();
-            dsigma.pop_back();
+            dphi_id[dphi_num][0]=ver_pos[now];
+            dphi_id[dphi_num][1]=docs[sess.doc_id[ver_pos[now]]].type;
+            dphi[dphi_num]=1./phi[ver_pos[now]][docs[sess.doc_id[ver_pos[now]]].type];//
+            dsigma[dphi_num]=1./sigma[ver_pos[now]][docs[sess.doc_id[ver_pos[now]]].type];//
+            ret+=dfs(now+1,prob*phi[ver_pos[now]][docs[sess.doc_id[ver_pos[now]]].type]*sigma[ver_pos[now]][docs[sess.doc_id[ver_pos[now]]].type],sess,upd);
+            --dphi_num;
             way[ver_pos[now-1]+1]=2;
             pos_in_sess[ver_pos[now-1]+1]=ver_pos[now];
             for(int i=ver_pos[now-1]+2;i<=ver_pos[now];++i)
@@ -270,9 +271,12 @@ class fmvcm:public model
                 pos_in_sess[i]=i-1;
                 way[i]=2;
             }
-            dphi_id.push_back(phiid({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type}));
+            dphi_id[dphi_num][0]=ver_pos[now];
+            dphi_id[dphi_num][1]=docs[sess.doc_id[ver_pos[now]]].type;
+            dphi[dphi_num]=1./phi[ver_pos[now]][docs[sess.doc_id[ver_pos[now]]].type];//
+            dsigma[dphi_num]=1./sigma[ver_pos[now]][docs[sess.doc_id[ver_pos[now]]].type];//
+
             dphi.push_back(getphi({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type}));
-            dsigma_id.push_back(sigmaid({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type}));
             dsigma.push_back(-1./(1.-getsigma({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type})));
             ret+=dfs(now+1,prob*getphi({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type})*(1.-getsigma({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type})),sess,upd);
             dphi_id.pop_back();
