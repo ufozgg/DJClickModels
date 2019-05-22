@@ -99,7 +99,9 @@ class fmvcm:public model
         int view_len[DOCPERPAGE+2];
         int pos_in_sess[DOCPERPAGE+2],st[DOCPERPAGE+2],en[DOCPERPAGE+2],way[DOCPERPAGE+2];
         vector<int> ver_pos;
-        int dphi_id[DOCPERPAGE+2][2],dsigma_id[DOCPERPAGE+2][2];
+        int dphi_id[DOCPERPAGE+2][2];
+        double dphi[DOCPERPAGE+2],dsigma[DOCPERPAGE+2];
+        int dphi_num=0;
         /*phi sigma 上一个Vertical的位置（没有则记为0），当前Vertical的位置，当前Vertical类型*/
         /*gamma 上一个Vertical的位置（没有则记为0），当前Vertical的位置，当前Vertical类型，当前顺序，结果位置，上一个点击位置*/
         double calc_seq_prob(double prob,Session &sess,bool upd)
@@ -156,10 +158,11 @@ class fmvcm:public model
                     cerr<<click_rate[3]<<"\t"<<pos_in_sess[3]<<"\t"<<st[i]<<"\t"<<en[i]<<"\t"<<docs[sess.doc_id[en[i]]].type<<"\t"<<way[i]<<"\t"<<exam*getgamma({st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i,last_clk[i]})*alpha[sess.doc_id[pos_in_sess[i]]]<<"\n";
                 cerr<<"ee"<<endl;
             }*/
-            for(int i=0;i<dphi_id.size();++i)
-                cphi[dphi_id[i]]+=ret/tot_p*dphi[i];
-            for(int i=0;i<dsigma_id.size();++i)
-                csigma[dsigma_id[i]]+=ret/tot_p*dsigma[i];
+            for(int i=0;i<dphi_num;++i)
+            {
+                cphi[dphi_id[i][0]][dphi_id[i][1]]+=ret/tot_p*dphi[i];
+                sigma[dphi_id[i][0]][dphi_id[i][1]]+=ret/tot_p*dsigma[i];
+            }
             for(int i=1;i<=DOCPERPAGE;++i)
                 if(sess.click_time[pos_in_sess[i]]>.1)
                 {
@@ -217,11 +220,13 @@ class fmvcm:public model
                     pos_in_sess[i]=i;
                     way[i]=0;
                 }
-                dphi_id.push_back(phiid({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type}));
-                dphi.push_back(-1./(1.-getphi({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type})));//
+                dphi_id[dphi_num][0]=ver_pos[now];
+                dphi_id[dphi_num][1]=docs[sess.doc_id[ver_pos[now]]].type;
+                dphi[dphi_num]=(-1./(1.-getphi({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type})));
+                dsigma[dphi_num]=0;
+                ++dphi_num;
                 ret+=dfs(now+1,prob*(1.-getphi({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type})),sess,upd);
-                dphi_id.pop_back();
-                dphi.pop_back();
+                --dphi_num;
                 for(int i=ver_pos[now-1]+1;i<=ver_pos[now];++i)
                 {
                     pos_in_sess[i]=ver_pos[now-1]+ver_pos[now]-i+1;

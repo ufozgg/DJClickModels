@@ -284,7 +284,7 @@ class mvcm:public model
                     pos_in_sess[i]=ver_pos[now-1]+ver_pos[now]-i+1;
                     way[i]=1;
                 }
-                dphi_id.push_back(1./phiid({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type}));//
+                dphi_id.push_back(phiid({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type}));//
                 dphi.push_back(1);
                 ret+=dfs(now+1,prob*getphi({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type}),sess,upd);
                 dphi_id.pop_back();
