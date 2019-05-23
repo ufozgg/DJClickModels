@@ -35,6 +35,7 @@ vector<bool> gammaenable=vector<bool>{0,1,1,0,1,1};
 vector<bool> phienable=vector<bool>{0,1,1};
 vector<bool> sigmaenable=vector<bool>{0,1,1};
 double pr;
+double pr0[10];
 int main(int argc,char* argv[])
 {
 	cmdline::parser pa;
@@ -57,8 +58,12 @@ int main(int argc,char* argv[])
 	pa.add<std::string>("usetrained",'u',"if true ,not train ,load args from file",false,"false");
 	pa.add<std::string>("enable",'e',"args for mvcm",false,"111111111");
 	pa.add<std::string>("pr",'p',"smooth val",false,"1.0");
+	pa.add<std::string>("pr0",'P',"smooth val for mvcm",false,"1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0");
 	pa.parse_check(argc,argv);
 	pr=stod(pa.get<std::string>("pr"));
+	vector<string> pr0_str=split(pa.get<std::string>("pr0"),',');
+	for(int i=0;i<10;++i)
+		pr0[i]=stod(pr0_str[i]);
 	for(int i=0;i<6;++i)
 		if(pa.get<std::string>("enable")[i]=='0')
 			gammaenable[i]=0;
