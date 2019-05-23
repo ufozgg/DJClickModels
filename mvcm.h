@@ -5,6 +5,7 @@ extern vector<bool> gammaenable;
 extern vector<bool> phienable;
 extern vector<bool> sigmaenable;
 extern double pr;
+extern double pr0[10];
 class mvcm:public model
 {
     public:
@@ -13,6 +14,7 @@ class mvcm:public model
         vector<double> sigma,csigma;
         vector<int> arggamma,argphi,argsigma;
         vector<double> alpha,s_c,calpha,cs_c;
+        double maxd;
         double dlt=0.2,ddlt=0.9,eps=1e-6;
         vector<int> first_vertical;
         void train_init()
@@ -64,27 +66,30 @@ class mvcm:public model
         {
             return docs[x].type>1&&docs[x].type<9||docs[x].type==10||docs[x].type==14||docs[x].type==15;
         }
-        void clear_vec(vector<double> &arg,vector<double> &dt)
+        void clear_vec(vector<double> &arg,vector<double> &dt,double A=pr,double B=pr)
         {
             assert(arg.size()==dt.size());
+            #pragma omp parallel for
             for(int i=0;i<arg.size();++i)
             {
-                dt[i]=pr*(1./arg[i]-1./(1.-arg[i]));
+                dt[i]=A/arg[i]-B/(1.-arg[i]);
             }
         }
         void train_clear()
         {
-            clear_vec(alpha,calpha);
-            clear_vec(s_c,cs_c);
-            clear_vec(sigma,csigma);
-            clear_vec(gamma,cgamma);
-            clear_vec(phi,cphi);
+            clear_vec(alpha,calpha,pr0[0],pr0[1]);
+            clear_vec(s_c,cs_c,pr0[2],pr0[3]);
+            clear_vec(sigma,csigma,pr0[4],pr0[5]);
+            clear_vec(gamma,cgamma,pr0[6],pr0[7]);
+            clear_vec(phi,cphi,pr0[8],pr0[9]);
         }
         void update_vec(vector<double> &arg,vector<double> &dt)
         {
             assert(arg.size()==dt.size());
             for(int i=0;i<arg.size();++i)
             {
+                if(fabs(dt[i])>maxd)
+                    maxd=fabs(dt[i]);
                 if(dt[i]>eps)
                     arg[i]=min(1.-eps,arg[i]+dlt);
                 if(dt[i]<-eps)
@@ -169,36 +174,42 @@ class mvcm:public model
             memset(last_clk,0,sizeof(last_clk));
             double ret=prob,exam;
             last_clk[0]=last_clk[1]=0;
+            double ga[DOCPERPAGE+2],al[DOCPERPAGE+2],sc[DOCPERPAGE+2];
             for(int i=1;i<=DOCPERPAGE;++i)
+            {
+                ga[i]=getgamma({st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i,last_clk[i]});
+                al[i]=alpha[sess.doc_id[pos_in_sess[i]]];
+                sc[i]=s_c[sess.doc_id[pos_in_sess[i]]];
                 if(sess.click_time[pos_in_sess[i]]>.1)
                 {
                     exam=forward[i-1][0]/(forward[i-1][0]+forward[i-1][1]);
-                    click_rate[pos_in_sess[i]]+=prob*exam*getgamma({st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i,last_clk[i]})*alpha[sess.doc_id[pos_in_sess[i]]];
-                    forward[i][0]=forward[i-1][0]*getgamma({st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i,last_clk[i]})*alpha[sess.doc_id[pos_in_sess[i]]]*(1.-s_c[sess.doc_id[pos_in_sess[i]]]);
-                    forward[i][1]=forward[i-1][0]*getgamma({st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i,last_clk[i]})*alpha[sess.doc_id[pos_in_sess[i]]]*s_c[sess.doc_id[pos_in_sess[i]]];
-                    ret*=exam*getgamma({st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i,last_clk[i]})*alpha[sess.doc_id[pos_in_sess[i]]];
+                    click_rate[pos_in_sess[i]]+=prob*exam*ga[i]*alpha[sess.doc_id[pos_in_sess[i]]];
+                    forward[i][0]=forward[i-1][0]*ga[i]*alpha[sess.doc_id[pos_in_sess[i]]]*(1.-s_c[sess.doc_id[pos_in_sess[i]]]);
+                    forward[i][1]=forward[i-1][0]*ga[i]*alpha[sess.doc_id[pos_in_sess[i]]]*s_c[sess.doc_id[pos_in_sess[i]]];
+                    ret*=exam*ga[i]*alpha[sess.doc_id[pos_in_sess[i]]];
                     //exam=(1.-s_c[sess.doc_id[pos_in_sess[i]]]);
                     last_clk[i+1]=i;
                 }
                 else
                 {
                     exam=forward[i-1][0]/(forward[i-1][0]+forward[i-1][1]);
-                    click_rate[pos_in_sess[i]]+=prob*(1.-exam*getgamma({st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i,last_clk[i]})*alpha[sess.doc_id[pos_in_sess[i]]]);
-                    forward[i][0]=forward[i-1][0]*(1.-getgamma({st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i,last_clk[i]})*alpha[sess.doc_id[pos_in_sess[i]]]);
+                    click_rate[pos_in_sess[i]]+=prob*(1.-exam*ga[i]*alpha[sess.doc_id[pos_in_sess[i]]]);
+                    forward[i][0]=forward[i-1][0]*(1.-ga[i]*alpha[sess.doc_id[pos_in_sess[i]]]);
                     forward[i][1]=forward[i-1][1];
-                    ret*=(1.-exam*getgamma({st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i,last_clk[i]})*alpha[sess.doc_id[pos_in_sess[i]]]);
+                    ret*=(1.-exam*ga[i]*alpha[sess.doc_id[pos_in_sess[i]]]);
                     last_clk[i+1]=last_clk[i];
                 }
+            }
             for(int i=DOCPERPAGE;i;--i)
                 if(sess.click_time[pos_in_sess[i]]>.1)
                 {
                     backward[i][1]=0;
-                    backward[i][0]=getgamma({st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i,last_clk[i]})*alpha[sess.doc_id[pos_in_sess[i]]] * (backward[i+1][0]*(1.-s_c[sess.doc_id[pos_in_sess[i]]]) + backward[i+1][1]*s_c[sess.doc_id[pos_in_sess[i]]]);
+                    backward[i][0]=ga[i]*alpha[sess.doc_id[pos_in_sess[i]]] * (backward[i+1][0]*(1.-s_c[sess.doc_id[pos_in_sess[i]]]) + backward[i+1][1]*s_c[sess.doc_id[pos_in_sess[i]]]);
                 }
                 else
                 {
                     backward[i][1]=backward[i+1][1];
-                    backward[i][0]=backward[i+1][0]*(1.-getgamma({st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i,last_clk[i]})*alpha[sess.doc_id[pos_in_sess[i]]]);
+                    backward[i][0]=backward[i+1][0]*(1.-ga[i]*alpha[sess.doc_id[pos_in_sess[i]]]);
                 }
             if(!upd)
                 return ret;
@@ -210,20 +221,21 @@ class mvcm:public model
                 for(int i=1;i<=DOCPERPAGE;++i)
                     cerr<<pos_in_sess[i]<<"\t";cerr<<endl;
                 for(int i=1;i<=DOCPERPAGE;++i)
-                    cerr<<click_rate[3]<<"\t"<<pos_in_sess[3]<<"\t"<<st[i]<<"\t"<<en[i]<<"\t"<<docs[sess.doc_id[en[i]]].type<<"\t"<<way[i]<<"\t"<<exam*getgamma({st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i,last_clk[i]})*alpha[sess.doc_id[pos_in_sess[i]]]<<"\n";
+                    cerr<<click_rate[3]<<"\t"<<pos_in_sess[3]<<"\t"<<st[i]<<"\t"<<en[i]<<"\t"<<docs[sess.doc_id[en[i]]].type<<"\t"<<way[i]<<"\t"<<exam*ga[i]*alpha[sess.doc_id[pos_in_sess[i]]]<<"\n";
                 cerr<<"ee"<<endl;
             }*/
             for(int i=0;i<dphi_id.size();++i)
                 cphi[dphi_id[i]]+=ret/tot_p*dphi[i];
             for(int i=0;i<dsigma_id.size();++i)
                 csigma[dsigma_id[i]]+=ret/tot_p*dsigma[i];
+            #pragma omp parallel for
             for(int i=1;i<=DOCPERPAGE;++i)
                 if(sess.click_time[pos_in_sess[i]]>.1)
                 {
                     exam=forward[i-1][0]/(forward[i-1][0]+forward[i-1][1]);
                     //click_rate[pos_in_sess[i]]+=prob*exam*getgamma((st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i))*alpha[sess.doc_id[pos_in_sess[i]]];
                     //ret*=exam*getgamma((st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i))*alpha[sess.doc_id[pos_in_sess[i]]];
-                    addcgamma({st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i,last_clk[i]},ret/tot_p/getgamma({st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i,last_clk[i]}));
+                    addcgamma({st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i,last_clk[i]},ret/tot_p/ga[i]);
                     calpha[sess.doc_id[pos_in_sess[i]]]+=ret/tot_p/alpha[sess.doc_id[pos_in_sess[i]]];
                     cs_c[sess.doc_id[pos_in_sess[i]]]+=ret/tot_p/(backward[i+1][0]*(1.-s_c[sess.doc_id[pos_in_sess[i]]]) + backward[i+1][1]*s_c[sess.doc_id[pos_in_sess[i]]]) * (backward[i+1][1]-backward[i+1][0]);
                 }
@@ -232,7 +244,7 @@ class mvcm:public model
                     exam=forward[i-1][0]/(forward[i-1][0]+forward[i-1][1]);
                     //click_rate[pos_in_sess[i]]+=exam*(1.-getgamma((st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i))*alpha[sess.doc_id[pos_in_sess[i]]]);
                     addcgamma({st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i,last_clk[i]},-alpha[sess.doc_id[pos_in_sess[i]]]/tot_p*prob*(forward[i-1][0]*backward[i+1][0]));
-                    calpha[sess.doc_id[pos_in_sess[i]]]+=-getgamma({st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i,last_clk[i]})/tot_p*prob*(forward[i-1][0]*backward[i+1][0]);
+                    calpha[sess.doc_id[pos_in_sess[i]]]+=-ga[i]/tot_p*prob*(forward[i-1][0]*backward[i+1][0]);
                 }
         }
         //UPD:cphi+=dphi*p_now/tot_p
@@ -392,9 +404,10 @@ class mvcm:public model
                     ++sess_cnt;
                     calc_prob(sess,1);
                 }
+                maxd=0;
                 train_update();
                 //now_ll=this->test(false,1);
-                cerr<<"Round:\t"<<round<<"\tLL:\t"<<"\t"<<this->test(false,2)<<"\t"<<dlt<<endl;
+                cerr<<"Round:\t"<<round<<"\tLL:\t"<<"\t"<<this->test(false,2)<<"\t"<<dlt<<"\t"<<maxd<<endl;
                 last_ll=now_ll;
                 dlt*=ddlt;
             }

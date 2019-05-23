@@ -94,7 +94,14 @@ class model
             shuffle=vector<int>(sessions.size());
             for(int i=0;i<sessions.size();++i)
                 shuffle[i]=i;
-            std::random_shuffle(shuffle.begin(),shuffle.end());
+            int x,y;
+            for(int i=1;i<sessions.size();++i)
+            {
+                x=rand()%sessions.size();
+                y=rand()%sessions.size();
+                swap(shuffle[x],shuffle[y]);
+            }
+            //std::random_shuffle(shuffle.begin(),shuffle.end());
             int cnt=0;
             bool clk[DOCPERPAGE+2];
             double ctr=0,ctr_pos[DOCPERPAGE+2],pro[DOCPERPAGE+2];

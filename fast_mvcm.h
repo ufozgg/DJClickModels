@@ -13,6 +13,7 @@ class fmvcm:public model
         vector<int> first_vertical;
         double phi[DOCPERPAGE+2][MAXVERTICLE+2],cphi[DOCPERPAGE+2][MAXVERTICLE+2];
         double sigma[DOCPERPAGE+2][MAXVERTICLE+2],csigma[DOCPERPAGE+2][MAXVERTICLE+2];
+        double gamma[DOCPERPAGE+2][MAXVERTICLE+2][4][DOCPERPAGE+2][DOCPERPAGE+2],cgamma[DOCPERPAGE+2][MAXVERTICLE+2][4][DOCPERPAGE+2][DOCPERPAGE+2];
         void train_init()
         {
             name="MVCM";
@@ -38,7 +39,15 @@ class fmvcm:public model
                     phi[i][j]=sigma[i][j]=0.5;
                     cphi[i][j]=csigma[i][j]=0;
                 }
-            /*GAMMA*/
+            for(i=0;i<=DOCPERPAGE;++i)
+                for(j=0;j<=MAXVERTICLE;++j)
+                    for(int k=0;k<4;++k)
+                        for(int s=0;s<=DOCPERPAGE;++s)
+                            for(int d=0;d<=DOCPERPAGE;++d)
+                            {
+                                gamma[i][j][k][s][d]=0.5;
+                                cgamma[i][j][k][s][d]=0;
+                            }
         }
         bool is_vertical(int &x)
         {
@@ -114,36 +123,41 @@ class fmvcm:public model
             memset(last_clk,0,sizeof(last_clk));
             double ret=prob,exam;
             last_clk[0]=last_clk[1]=0;
+            double ga[DOCPERPAGE+2],al[DOCPERPAGE+2],sc[DOCPERPAGE+2];
             for(int i=1;i<=DOCPERPAGE;++i)
+            {
+                ga[i]=gamma[en[i]][docs[sess.doc_id[en[i]]].type][way[i]][i][last_clk[i]];
+                al[i]=alpha[sess.doc_id[pos_in_sess[i]]];
+                sc[i]=s_c[sess.doc_id[pos_in_sess[i]]];
                 if(sess.click_time[pos_in_sess[i]]>.1)
                 {
                     exam=forward[i-1][0]/(forward[i-1][0]+forward[i-1][1]);
-                    click_rate[pos_in_sess[i]]+=prob*exam*getgamma({st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i,last_clk[i]})*alpha[sess.doc_id[pos_in_sess[i]]];
-                    forward[i][0]=forward[i-1][0]*getgamma({st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i,last_clk[i]})*alpha[sess.doc_id[pos_in_sess[i]]]*(1.-s_c[sess.doc_id[pos_in_sess[i]]]);
-                    forward[i][1]=forward[i-1][0]*getgamma({st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i,last_clk[i]})*alpha[sess.doc_id[pos_in_sess[i]]]*s_c[sess.doc_id[pos_in_sess[i]]];
-                    ret*=exam*getgamma({st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i,last_clk[i]})*alpha[sess.doc_id[pos_in_sess[i]]];
-                    //exam=(1.-s_c[sess.doc_id[pos_in_sess[i]]]);
+                    click_rate[pos_in_sess[i]]+=prob*exam*ga[i]*al[i];
+                    forward[i][0]=forward[i-1][0]*ga[i]*al[i]*(1.-sc[i]);
+                    forward[i][1]=forward[i-1][0]*ga[i]*al[i]*sc[i];
+                    ret*=exam*ga[i]*al[i];
                     last_clk[i+1]=i;
                 }
                 else
                 {
                     exam=forward[i-1][0]/(forward[i-1][0]+forward[i-1][1]);
-                    click_rate[pos_in_sess[i]]+=prob*(1.-exam*getgamma({st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i,last_clk[i]})*alpha[sess.doc_id[pos_in_sess[i]]]);
-                    forward[i][0]=forward[i-1][0]*(1.-getgamma({st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i,last_clk[i]})*alpha[sess.doc_id[pos_in_sess[i]]]);
+                    click_rate[pos_in_sess[i]]+=prob*(1.-exam*ga[i]*al[i]);
+                    forward[i][0]=forward[i-1][0]*(1.-ga[i]*al[i]);
                     forward[i][1]=forward[i-1][1];
-                    ret*=(1.-exam*getgamma({st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i,last_clk[i]})*alpha[sess.doc_id[pos_in_sess[i]]]);
+                    ret*=(1.-exam*ga[i]*al[i]);
                     last_clk[i+1]=last_clk[i];
                 }
+            }
             for(int i=DOCPERPAGE;i;--i)
                 if(sess.click_time[pos_in_sess[i]]>.1)
                 {
                     backward[i][1]=0;
-                    backward[i][0]=getgamma({st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i,last_clk[i]})*alpha[sess.doc_id[pos_in_sess[i]]] * (backward[i+1][0]*(1.-s_c[sess.doc_id[pos_in_sess[i]]]) + backward[i+1][1]*s_c[sess.doc_id[pos_in_sess[i]]]);
+                    backward[i][0]=ga[i]*al[i] * (backward[i+1][0]*(1.-sc[i]) + backward[i+1][1]*sc[i]);
                 }
                 else
                 {
                     backward[i][1]=backward[i+1][1];
-                    backward[i][0]=backward[i+1][0]*(1.-getgamma({st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i,last_clk[i]})*alpha[sess.doc_id[pos_in_sess[i]]]);
+                    backward[i][0]=backward[i+1][0]*(1.-ga[i]*al[i]);
                 }
             if(!upd)
                 return ret;
@@ -167,18 +181,15 @@ class fmvcm:public model
                 if(sess.click_time[pos_in_sess[i]]>.1)
                 {
                     exam=forward[i-1][0]/(forward[i-1][0]+forward[i-1][1]);
-                    //click_rate[pos_in_sess[i]]+=prob*exam*getgamma((st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i))*alpha[sess.doc_id[pos_in_sess[i]]];
-                    //ret*=exam*getgamma((st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i))*alpha[sess.doc_id[pos_in_sess[i]]];
-                    addcgamma({st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i,last_clk[i]},ret/tot_p/getgamma({st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i,last_clk[i]}));
-                    calpha[sess.doc_id[pos_in_sess[i]]]+=ret/tot_p/alpha[sess.doc_id[pos_in_sess[i]]];
-                    cs_c[sess.doc_id[pos_in_sess[i]]]+=ret/tot_p/(backward[i+1][0]*(1.-s_c[sess.doc_id[pos_in_sess[i]]]) + backward[i+1][1]*s_c[sess.doc_id[pos_in_sess[i]]]) * (backward[i+1][1]-backward[i+1][0]);
+                    cgamma[en[i]][docs[sess.doc_id[en[i]]].type][way[i]][i][last_clk[i]]+=ret/tot_p/ga[i];
+                    calpha[sess.doc_id[pos_in_sess[i]]]+=ret/tot_p/al[i];
+                    cs_c[sess.doc_id[pos_in_sess[i]]]+=ret/tot_p/(backward[i+1][0]*(1.-sc[i]) + backward[i+1][1]*sc[i]) * (backward[i+1][1]-backward[i+1][0]);
                 }
                 else
                 {
                     exam=forward[i-1][0]/(forward[i-1][0]+forward[i-1][1]);
-                    //click_rate[pos_in_sess[i]]+=exam*(1.-getgamma((st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i))*alpha[sess.doc_id[pos_in_sess[i]]]);
-                    addcgamma({st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i,last_clk[i]},-alpha[sess.doc_id[pos_in_sess[i]]]/tot_p*prob*(forward[i-1][0]*backward[i+1][0]));
-                    calpha[sess.doc_id[pos_in_sess[i]]]+=-getgamma({st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i,last_clk[i]})/tot_p*prob*(forward[i-1][0]*backward[i+1][0]);
+                    cgamma[en[i]][docs[sess.doc_id[en[i]]].type][way[i]][i][last_clk[i]]+=-al[i]/tot_p*prob*(forward[i-1][0]*backward[i+1][0]);
+                    calpha[sess.doc_id[pos_in_sess[i]]]+=-ga[i]/tot_p*prob*(forward[i-1][0]*backward[i+1][0]);
                 }
         }
         //UPD:cphi+=dphi*p_now/tot_p
@@ -213,6 +224,7 @@ class fmvcm:public model
                 return dfs(now+1,prob,sess,upd);
             }
             double ret=0;
+            double &ph=phi[ver_pos[now]][docs[sess.doc_id[ver_pos[now]]].type],&si=sigma[ver_pos[now]][docs[sess.doc_id[ver_pos[now]]].type];
             if(ver_pos[now]-ver_pos[now-1]==2)
             {
                 for(int i=ver_pos[now-1]+1;i<=ver_pos[now];++i)
@@ -222,10 +234,10 @@ class fmvcm:public model
                 }
                 dphi_id[dphi_num][0]=ver_pos[now];
                 dphi_id[dphi_num][1]=docs[sess.doc_id[ver_pos[now]]].type;
-                dphi[dphi_num]=-1./(1.-phi[ver_pos[now]][docs[sess.doc_id[ver_pos[now]]].type]);
+                dphi[dphi_num]=-1./(1.-ph);
                 dsigma[dphi_num]=0;
                 ++dphi_num;
-                ret+=dfs(now+1,prob*(1.-phi[ver_pos[now]][docs[sess.doc_id[ver_pos[now]]].type]),sess,upd);
+                ret+=dfs(now+1,prob*(1.-ph),sess,upd);
                 --dphi_num;
                 for(int i=ver_pos[now-1]+1;i<=ver_pos[now];++i)
                 {
@@ -234,10 +246,10 @@ class fmvcm:public model
                 }
                 dphi_id[dphi_num][0]=ver_pos[now];
                 dphi_id[dphi_num][1]=docs[sess.doc_id[ver_pos[now]]].type;
-                dphi[dphi_num]=1./phi[ver_pos[now]][docs[sess.doc_id[ver_pos[now]]].type];
+                dphi[dphi_num]=1./ph;
                 dsigma[dphi_num]=0;
                 ++dphi_num;
-                ret+=dfs(now+1,prob*phi[ver_pos[now]][docs[sess.doc_id[ver_pos[now]]].type],sess,upd);
+                ret+=dfs(now+1,prob*ph,sess,upd);
                 --dphi_num;
                 return ret;
             }
@@ -248,10 +260,10 @@ class fmvcm:public model
             }
             dphi_id[dphi_num][0]=ver_pos[now];
             dphi_id[dphi_num][1]=docs[sess.doc_id[ver_pos[now]]].type;
-            dphi[dphi_num]=-1./(1.-phi[ver_pos[now]][docs[sess.doc_id[ver_pos[now]]].type]);
+            dphi[dphi_num]=-1./(1.-ph);
             dsigma[dphi_num]=0;
             ++dphi_num;
-            ret+=dfs(now+1,prob*(1.-phi[ver_pos[now]][docs[sess.doc_id[ver_pos[now]]].type]),sess,upd);
+            ret+=dfs(now+1,prob*(1.-ph),sess,upd);
             --dphi_num;
             for(int i=ver_pos[now-1]+1;i<=ver_pos[now];++i)
             {
@@ -260,9 +272,10 @@ class fmvcm:public model
             }
             dphi_id[dphi_num][0]=ver_pos[now];
             dphi_id[dphi_num][1]=docs[sess.doc_id[ver_pos[now]]].type;
-            dphi[dphi_num]=1./phi[ver_pos[now]][docs[sess.doc_id[ver_pos[now]]].type];//
-            dsigma[dphi_num]=1./sigma[ver_pos[now]][docs[sess.doc_id[ver_pos[now]]].type];//
-            ret+=dfs(now+1,prob*phi[ver_pos[now]][docs[sess.doc_id[ver_pos[now]]].type]*sigma[ver_pos[now]][docs[sess.doc_id[ver_pos[now]]].type],sess,upd);
+            dphi[dphi_num]=1./ph;//
+            dsigma[dphi_num]=1./si;//
+            ++dphi_num;
+            ret+=dfs(now+1,prob*ph*si,sess,upd);
             --dphi_num;
             way[ver_pos[now-1]+1]=2;
             pos_in_sess[ver_pos[now-1]+1]=ver_pos[now];
@@ -273,26 +286,18 @@ class fmvcm:public model
             }
             dphi_id[dphi_num][0]=ver_pos[now];
             dphi_id[dphi_num][1]=docs[sess.doc_id[ver_pos[now]]].type;
-            dphi[dphi_num]=1./phi[ver_pos[now]][docs[sess.doc_id[ver_pos[now]]].type];//
-            dsigma[dphi_num]=1./sigma[ver_pos[now]][docs[sess.doc_id[ver_pos[now]]].type];//
-
-            dphi.push_back(getphi({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type}));
-            dsigma.push_back(-1./(1.-getsigma({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type})));
-            ret+=dfs(now+1,prob*getphi({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type})*(1.-getsigma({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type})),sess,upd);
-            dphi_id.pop_back();
-            dphi.pop_back();
-            dsigma_id.pop_back();
-            dsigma.pop_back();
+            dphi[dphi_num]=1./ph;//
+            dsigma[dphi_num]=-1./(1.-si);//
+            ++dphi_num;
+            ret+=dfs(now+1,prob*ph*(1.-si),sess,upd);
+            --dphi_num;
             return ret;
         }
         void sess_prework(Session &sess)
         {
             ver_pos.clear();
             ver_pos.push_back(0);
-            dphi.clear();
-            dphi_id.clear();
-            dsigma.clear();
-            dsigma_id.clear();
+            dphi_num=0;
             for(int i=1;i<=DOCPERPAGE;++i)
                 if(is_vertical(sess.doc_id[i]))
                 {
