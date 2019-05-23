@@ -14,6 +14,7 @@ class mvcm:public model
         vector<double> sigma,csigma;
         vector<int> arggamma,argphi,argsigma;
         vector<double> alpha,s_c,calpha,cs_c;
+        double maxd;
         double dlt=0.2,ddlt=0.9,eps=1e-6;
         vector<int> first_vertical;
         void train_init()
@@ -87,6 +88,8 @@ class mvcm:public model
             assert(arg.size()==dt.size());
             for(int i=0;i<arg.size();++i)
             {
+                if(fabs(dt[i])>maxd)
+                    maxd=fabs(dt[i]);
                 if(dt[i]>eps)
                     arg[i]=min(1.-eps,arg[i]+dlt);
                 if(dt[i]<-eps)
@@ -401,9 +404,10 @@ class mvcm:public model
                     ++sess_cnt;
                     calc_prob(sess,1);
                 }
+                maxd=0;
                 train_update();
                 //now_ll=this->test(false,1);
-                cerr<<"Round:\t"<<round<<"\tLL:\t"<<"\t"<<this->test(false,2)<<"\t"<<dlt<<endl;
+                cerr<<"Round:\t"<<round<<"\tLL:\t"<<"\t"<<this->test(false,2)<<"\t"<<dlt<<"\t"<<maxd<<endl;
                 last_ll=now_ll;
                 dlt*=ddlt;
             }
