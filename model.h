@@ -225,9 +225,10 @@ class model
             }
             double click_prob[DOCPERPAGE+2];
             double minn=1;
-            #pragma omp parallel for num_threads(4)
-			for(auto &sess:sessions)
+            //#pragma omp parallel for
+			for(int id=0;id<sessions.size();++id)
             {
+                auto &sess=sessions[id];
                 if(sess.enable==false)
                     continue;
                 ++sess_cnt;
