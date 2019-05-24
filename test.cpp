@@ -1,5 +1,3 @@
-#ifndef COMMON_H
-#define COMMON_H
 #include<cmath>
 #include<vector>
 #include<map>
@@ -15,5 +13,11 @@
 #include<memory>
 #include<atomic>
 using namespace std;
-vector<string> split(string w,char cut);
-#endif
+int main()
+{
+
+    #pragma omp parallel for
+	for(int i=1;i<=10;++i)
+		cout<<i<<endl;
+	return 0;
+}
