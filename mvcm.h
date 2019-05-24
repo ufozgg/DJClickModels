@@ -89,7 +89,7 @@ class mvcm:public model
         void clear_vec(vector<double> &arg,vector<shared_ptr<atomic<long long>>> &dt,double A=pr,double B=pr)
         {
             //assert(arg.size()==dt.size());
-            //#pragma omp parallel for
+            #pragma omp parallel for
             for(int i=0;i<arg.size();++i)
             {
                 //dt[i]=(long long)(1e6*(A/arg[i]-B/(1.-arg[i])));
@@ -107,7 +107,7 @@ class mvcm:public model
         void update_vec(vector<double> &arg,vector<shared_ptr<atomic<long long>>> &dt)
         {
             //assert(arg.size()==dt.size());
-            //#pragma omp parallel for
+            #pragma omp parallel for
             for(int i=0;i<arg.size();++i)
             {
                 /*if(fabs(dt[i])>maxd)
@@ -391,7 +391,7 @@ class mvcm:public model
             {
                 train_clear();
                 double maxdlt=0;
-                #pragma omp parallel for num_threads(4)
+                #pragma omp parallel for
                 for(int id=0;id<sessions.size();++id)
                 {
                     auto &sess=sessions[id];
@@ -404,7 +404,8 @@ class mvcm:public model
                 maxd=0;
                 train_update();
                 //now_ll=this->test(false,1);
-                cerr<<"Round:\t"<<round<<"\tLL:\t"<<"\t"<<this->test(false,2)<<"\t"<<dlt<<"\t"<<maxd<<endl;
+                if(round%20==0)
+                    cerr<<"Round:\t"<<round<<"\tLL:\t"<<"\t"<<this->test(false,2)<<"\t"<<dlt<<"\t"<<maxd<<endl;
                 last_ll=now_ll;
                 dlt*=ddlt;
             }
