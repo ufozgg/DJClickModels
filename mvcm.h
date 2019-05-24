@@ -6,16 +6,28 @@ extern vector<bool> phienable;
 extern vector<bool> sigmaenable;
 extern double pr;
 extern double pr0[10];
+class mvcm_sess_data
+{
+    public:
+    double click_rate[DOCPERPAGE+2],forward[DOCPERPAGE+2][2],backward[DOCPERPAGE+2][2];
+    int pos_in_sess[DOCPERPAGE+2],st[DOCPERPAGE+2],en[DOCPERPAGE+2],way[DOCPERPAGE+2];
+    vector<int> ver_pos;
+    vector<int> dphi_id,dsigma_id;
+    vector<double> dphi,dsigma;
+    double tot_p;
+};
 class mvcm:public model
 {
     public:
-        vector<double> gamma,cgamma;
-        vector<double> phi,cphi;
-        vector<double> sigma,csigma;
+        vector<double> gamma;
+        vector<double> phi;
+        vector<double> sigma;
         vector<int> arggamma,argphi,argsigma;
-        vector<double> alpha,s_c,calpha,cs_c;
+        vector<double> alpha,s_c;
+        vector<shared_ptr<atomic<long long>>> cgamma,cphi,csigma,calpha,cs_c;
+        //vector<double> cgamma,cphi,csigma,calpha,cs_c;
         double maxd;
-        double dlt=0.2,ddlt=0.9,eps=1e-6;
+        double dlt=0.4,ddlt=0.7,eps=1e-6;
         vector<int> first_vertical;
         void train_init()
         {
@@ -24,11 +36,13 @@ class mvcm:public model
             doc_rel=vector<double>(docs.size()+1);
             alpha=vector<double>(docs.size()+1);
             s_c=vector<double>(docs.size()+1);
-            calpha=vector<double>(docs.size()+1);
-            cs_c=vector<double>(docs.size()+1);
             for(int i=0;i<=docs.size();++i)
             {
                 alpha[i]=s_c[i]=0.5;
+                calpha.push_back(shared_ptr<atomic<long long> >(new atomic<long long>(0)));
+                cs_c.push_back(shared_ptr<atomic<long long> >(new atomic<long long>(0)));/**/
+                //calpha.push_back(0);
+                //cs_c.push_back(0);
             }
             argphi=vector<int>{DOCPERPAGE+2,DOCPERPAGE+2,MAXVERTICLE+2};/*上一个Vertical的位置（没有则记为0），当前Vertical的位置，当前Vertical类型*/
             argsigma=vector<int>{DOCPERPAGE+2,DOCPERPAGE+2,MAXVERTICLE+2};/*上一个Vertical的位置（没有则记为0），当前Vertical的位置，当前Vertical类型*/
@@ -38,41 +52,48 @@ class mvcm:public model
             for(auto i:arggamma)
                 siz*=i;
             gamma.resize(siz+2);
-            cgamma.resize(siz+2);
+            for(int i=0;i<=siz+2;++i)
+            {
+                cgamma.push_back(shared_ptr<atomic<long long> >(new atomic<long long>(0)));
+                //cgamma.push_back(0);
+            }
             siz=1;
             for(auto i:argsigma)
                 siz*=i;
             sigma.resize(siz+2);
-            csigma.resize(siz+2);
+            for(int i=0;i<=siz+2;++i)
+            {
+                csigma.push_back(shared_ptr<atomic<long long> >(new atomic<long long>(0)));
+                //csigma.push_back(0);
+            }
             siz=1;
             for(auto i:argphi)
                 siz*=i;
             phi.resize(siz+2);
-            cphi.resize(siz+2);
+            for(int i=0;i<=siz+2;++i)
+            {
+                cphi.push_back(shared_ptr<atomic<long long> >(new atomic<long long>(0)));
+                //cphi.push_back(0);
+            }
             for(auto &i:gamma)
                 i=0.5;
             for(auto &i:sigma)
                 i=0.5;
             for(auto &i:phi)
                 i=0.5;
-            for(auto &i:cgamma)
-                i=0;
-            for(auto &i:csigma)
-                i=0;
-            for(auto &i:cphi)
-                i=0;
         }
         bool is_vertical(int &x)
         {
             return docs[x].type>1&&docs[x].type<9||docs[x].type==10||docs[x].type==14||docs[x].type==15;
         }
-        void clear_vec(vector<double> &arg,vector<double> &dt,double A=pr,double B=pr)
+        void clear_vec(vector<double> &arg,vector<shared_ptr<atomic<long long>>> &dt,double A=pr,double B=pr)
         {
-            assert(arg.size()==dt.size());
-            #pragma omp parallel for
+            //assert(arg.size()==dt.size());
+            //#pragma omp parallel for
             for(int i=0;i<arg.size();++i)
             {
-                dt[i]=A/arg[i]-B/(1.-arg[i]);
+                //dt[i]=(long long)(1e6*(A/arg[i]-B/(1.-arg[i])));
+                atomic_init(dt[i].get(),(long long)(1e6*(A/arg[i]-B/(1.-arg[i]))));
             }
         }
         void train_clear()
@@ -83,17 +104,18 @@ class mvcm:public model
             clear_vec(gamma,cgamma,pr0[6],pr0[7]);
             clear_vec(phi,cphi,pr0[8],pr0[9]);
         }
-        void update_vec(vector<double> &arg,vector<double> &dt)
+        void update_vec(vector<double> &arg,vector<shared_ptr<atomic<long long>>> &dt)
         {
-            assert(arg.size()==dt.size());
+            //assert(arg.size()==dt.size());
+            //#pragma omp parallel for
             for(int i=0;i<arg.size();++i)
             {
-                if(fabs(dt[i])>maxd)
-                    maxd=fabs(dt[i]);
-                if(dt[i]>eps)
-                    arg[i]=min(1.-eps,arg[i]+dlt);
-                if(dt[i]<-eps)
-                    arg[i]=max(eps,arg[i]-dlt);
+                /*if(fabs(dt[i])>maxd)
+                    maxd=fabs(dt[i]);*/
+                if(*dt[i].get()>0)
+                    arg[i]=min(1.-eps*1e-3,arg[i]+dlt);
+                else
+                    arg[i]=max(eps*1e-3,arg[i]-dlt);
             }
         }
         void train_update()
@@ -104,9 +126,7 @@ class mvcm:public model
             update_vec(gamma,cgamma);
             update_vec(phi,cphi);
         }
-        double click_rate[DOCPERPAGE+2],forward[DOCPERPAGE+2][2],backward[DOCPERPAGE+2][2];
         /*顺序0：1234，顺序1：4123，顺序2：4321*/
-        int view_len[DOCPERPAGE+2];
         int phiid(const vector<int> &idx)
         {
             assert(idx.size()==argphi.size());
@@ -122,7 +142,11 @@ class mvcm:public model
         }
         double addcphi(const vector<int> &idx,double v)
         {
-            cphi[phiid(idx)]+=v;
+            if(v>1e5)
+                v=1e5;
+            if(v<-1e5)
+                v=-1e5;
+            atomic_fetch_add(cphi[phiid(idx)].get(),(long long)(1e6*v));
         }
         int sigmaid(const vector<int> &idx)
         {
@@ -139,7 +163,11 @@ class mvcm:public model
         }
         double addcsigma(const vector<int> &idx,double v)
         {
-            csigma[sigmaid(idx)]+=v;
+            if(v>1e5)
+                v=1e5;
+            if(v<-1e5)
+                v=-1e5;
+            atomic_fetch_add(csigma[sigmaid(idx)].get(),(long long)(1e6*v));
         }
         int gammaid(const vector<int> &idx)
         {
@@ -154,238 +182,205 @@ class mvcm:public model
         {
             return gamma[gammaid(idx)];
         }
-        double addcgamma(const vector<int> &idx,double v)
+        void addcgamma(const vector<int> &idx,double v)
         {
-            cgamma[gammaid(idx)]+=v;
+            if(v>1e5)
+                v=1e5;
+            if(v<-1e5)
+                v=-1e5;
+            //cerr<<*cgamma[gammaid(idx)].get()<<"\t"<<v<<endl;
+            atomic_fetch_add(cgamma[gammaid(idx)].get(),(long long)(1e6*v));
+            //cerr<<*cgamma[gammaid(idx)].get()<<"\t"<<v<<endl;
         }
-        int pos_in_sess[DOCPERPAGE+2],st[DOCPERPAGE+2],en[DOCPERPAGE+2],way[DOCPERPAGE+2];
-        vector<int> ver_pos;
-        vector<int> dphi_id,dsigma_id;
-        vector<double> dphi,dsigma;
         /*phi sigma 上一个Vertical的位置（没有则记为0），当前Vertical的位置，当前Vertical类型*/
         /*gamma 上一个Vertical的位置（没有则记为0），当前Vertical的位置，当前Vertical类型，当前顺序，结果位置，上一个点击位置*/
-        double calc_seq_prob(double prob,Session &sess,bool upd)
+        double calc_seq_prob(double prob,Session &sess,bool upd,mvcm_sess_data &sess_data)
         {
-            memset(forward,0,sizeof(forward));
-            memset(backward,0,sizeof(backward));
-            forward[0][0]=1;
-            backward[DOCPERPAGE+1][0]=backward[DOCPERPAGE+1][1]=1;
-            static int last_clk[DOCPERPAGE+2],last_ver=0;
+            memset(sess_data.forward,0,sizeof(sess_data.forward));
+            memset(sess_data.backward,0,sizeof(sess_data.backward));
+            sess_data.forward[0][0]=1;
+            sess_data.backward[DOCPERPAGE+1][0]=sess_data.backward[DOCPERPAGE+1][1]=1;
+            int last_clk[DOCPERPAGE+2],last_ver=0;
             memset(last_clk,0,sizeof(last_clk));
             double ret=prob,exam;
             last_clk[0]=last_clk[1]=0;
             double ga[DOCPERPAGE+2],al[DOCPERPAGE+2],sc[DOCPERPAGE+2];
             for(int i=1;i<=DOCPERPAGE;++i)
             {
-                ga[i]=getgamma({st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i,last_clk[i]});
-                al[i]=alpha[sess.doc_id[pos_in_sess[i]]];
-                sc[i]=s_c[sess.doc_id[pos_in_sess[i]]];
-                if(sess.click_time[pos_in_sess[i]]>.1)
+                ga[i]=getgamma({sess_data.st[i],sess_data.en[i],docs[sess.doc_id[sess_data.en[i]]].type,sess_data.way[i],i,last_clk[i]});
+                al[i]=alpha[sess.doc_id[sess_data.pos_in_sess[i]]];
+                sc[i]=s_c[sess.doc_id[sess_data.pos_in_sess[i]]];
+                exam=sess_data.forward[i-1][0]/(sess_data.forward[i-1][0]+sess_data.forward[i-1][1]);
+                if(sess.click_time[sess_data.pos_in_sess[i]]>.1)
                 {
-                    exam=forward[i-1][0]/(forward[i-1][0]+forward[i-1][1]);
-                    click_rate[pos_in_sess[i]]+=prob*exam*ga[i]*alpha[sess.doc_id[pos_in_sess[i]]];
-                    forward[i][0]=forward[i-1][0]*ga[i]*alpha[sess.doc_id[pos_in_sess[i]]]*(1.-s_c[sess.doc_id[pos_in_sess[i]]]);
-                    forward[i][1]=forward[i-1][0]*ga[i]*alpha[sess.doc_id[pos_in_sess[i]]]*s_c[sess.doc_id[pos_in_sess[i]]];
-                    ret*=exam*ga[i]*alpha[sess.doc_id[pos_in_sess[i]]];
+                    sess_data.click_rate[sess_data.pos_in_sess[i]]+=prob*exam*ga[i]*alpha[sess.doc_id[sess_data.pos_in_sess[i]]];
+                    sess_data.forward[i][0]=sess_data.forward[i-1][0]*ga[i]*alpha[sess.doc_id[sess_data.pos_in_sess[i]]]*(1.-s_c[sess.doc_id[sess_data.pos_in_sess[i]]]);
+                    sess_data.forward[i][1]=sess_data.forward[i-1][0]*ga[i]*alpha[sess.doc_id[sess_data.pos_in_sess[i]]]*s_c[sess.doc_id[sess_data.pos_in_sess[i]]];
+                    ret*=exam*ga[i]*alpha[sess.doc_id[sess_data.pos_in_sess[i]]];
                     //exam=(1.-s_c[sess.doc_id[pos_in_sess[i]]]);
                     last_clk[i+1]=i;
                 }
                 else
                 {
-                    exam=forward[i-1][0]/(forward[i-1][0]+forward[i-1][1]);
-                    click_rate[pos_in_sess[i]]+=prob*(1.-exam*ga[i]*alpha[sess.doc_id[pos_in_sess[i]]]);
-                    forward[i][0]=forward[i-1][0]*(1.-ga[i]*alpha[sess.doc_id[pos_in_sess[i]]]);
-                    forward[i][1]=forward[i-1][1];
-                    ret*=(1.-exam*ga[i]*alpha[sess.doc_id[pos_in_sess[i]]]);
+                    sess_data.click_rate[sess_data.pos_in_sess[i]]+=prob*(1.-exam*ga[i]*alpha[sess.doc_id[sess_data.pos_in_sess[i]]]);
+                    sess_data.forward[i][0]=sess_data.forward[i-1][0]*(1.-ga[i]*alpha[sess.doc_id[sess_data.pos_in_sess[i]]]);
+                    sess_data.forward[i][1]=sess_data.forward[i-1][1];
+                    ret*=(1.-exam*ga[i]*alpha[sess.doc_id[sess_data.pos_in_sess[i]]]);
                     last_clk[i+1]=last_clk[i];
                 }
             }
             for(int i=DOCPERPAGE;i;--i)
-                if(sess.click_time[pos_in_sess[i]]>.1)
+                if(sess.click_time[sess_data.pos_in_sess[i]]>.1)
                 {
-                    backward[i][1]=0;
-                    backward[i][0]=ga[i]*alpha[sess.doc_id[pos_in_sess[i]]] * (backward[i+1][0]*(1.-s_c[sess.doc_id[pos_in_sess[i]]]) + backward[i+1][1]*s_c[sess.doc_id[pos_in_sess[i]]]);
+                    sess_data.backward[i][1]=0;
+                    sess_data.backward[i][0]=ga[i]*alpha[sess.doc_id[sess_data.pos_in_sess[i]]] * (sess_data.backward[i+1][0]*(1.-s_c[sess.doc_id[sess_data.pos_in_sess[i]]]) + sess_data.backward[i+1][1]*s_c[sess.doc_id[sess_data.pos_in_sess[i]]]);
                 }
                 else
                 {
-                    backward[i][1]=backward[i+1][1];
-                    backward[i][0]=backward[i+1][0]*(1.-ga[i]*alpha[sess.doc_id[pos_in_sess[i]]]);
+                    sess_data.backward[i][1]=sess_data.backward[i+1][1];
+                    sess_data.backward[i][0]=sess_data.backward[i+1][0]*(1.-ga[i]*alpha[sess.doc_id[sess_data.pos_in_sess[i]]]);
                 }
             if(!upd)
                 return ret;
             if(ret<eps)
                 return ret;
-            /*if(sess.id==1)
+            for(int i=0;i<sess_data.dphi_id.size();++i)
+                atomic_fetch_add(cphi[sess_data.dphi_id[i]].get(),(long long)(1e6*ret/sess_data.tot_p*sess_data.dphi[i]));
+            for(int i=0;i<sess_data.dsigma_id.size();++i)
+                atomic_fetch_add(csigma[sess_data.dsigma_id[i]].get(),(long long)(1e6*ret/sess_data.tot_p*sess_data.dsigma[i]));
+            for(int i=1;i<=10;++i)
             {
-                cerr<<"bb"<<prob<<"\t"<<ret<<"\t"<<tot_p<<endl;
-                for(int i=1;i<=DOCPERPAGE;++i)
-                    cerr<<pos_in_sess[i]<<"\t";cerr<<endl;
-                for(int i=1;i<=DOCPERPAGE;++i)
-                    cerr<<click_rate[3]<<"\t"<<pos_in_sess[3]<<"\t"<<st[i]<<"\t"<<en[i]<<"\t"<<docs[sess.doc_id[en[i]]].type<<"\t"<<way[i]<<"\t"<<exam*ga[i]*alpha[sess.doc_id[pos_in_sess[i]]]<<"\n";
-                cerr<<"ee"<<endl;
-            }*/
-            for(int i=0;i<dphi_id.size();++i)
-                cphi[dphi_id[i]]+=ret/tot_p*dphi[i];
-            for(int i=0;i<dsigma_id.size();++i)
-                csigma[dsigma_id[i]]+=ret/tot_p*dsigma[i];
-            #pragma omp parallel for
-            for(int i=1;i<=DOCPERPAGE;++i)
-                if(sess.click_time[pos_in_sess[i]]>.1)
+                exam=sess_data.forward[i-1][0]/(sess_data.forward[i-1][0]+sess_data.forward[i-1][1]);
+                if(sess.click_time[sess_data.pos_in_sess[i]]>.1)
                 {
-                    exam=forward[i-1][0]/(forward[i-1][0]+forward[i-1][1]);
-                    //click_rate[pos_in_sess[i]]+=prob*exam*getgamma((st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i))*alpha[sess.doc_id[pos_in_sess[i]]];
-                    //ret*=exam*getgamma((st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i))*alpha[sess.doc_id[pos_in_sess[i]]];
-                    addcgamma({st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i,last_clk[i]},ret/tot_p/ga[i]);
-                    calpha[sess.doc_id[pos_in_sess[i]]]+=ret/tot_p/alpha[sess.doc_id[pos_in_sess[i]]];
-                    cs_c[sess.doc_id[pos_in_sess[i]]]+=ret/tot_p/(backward[i+1][0]*(1.-s_c[sess.doc_id[pos_in_sess[i]]]) + backward[i+1][1]*s_c[sess.doc_id[pos_in_sess[i]]]) * (backward[i+1][1]-backward[i+1][0]);
+                    addcgamma({sess_data.st[i],sess_data.en[i],docs[sess.doc_id[sess_data.en[i]]].type,sess_data.way[i],i,last_clk[i]},ret/sess_data.tot_p/ga[i]);
+                    atomic_fetch_add(calpha[sess.doc_id[sess_data.pos_in_sess[i]]].get(),(long long)(1e6*ret/sess_data.tot_p/alpha[sess.doc_id[sess_data.pos_in_sess[i]]]));
+                    atomic_fetch_add(cs_c[sess.doc_id[sess_data.pos_in_sess[i]]].get(),(long long)(1e6*(ret/sess_data.tot_p/(sess_data.backward[i+1][0]*(1.-s_c[sess.doc_id[sess_data.pos_in_sess[i]]]) + sess_data.backward[i+1][1]*s_c[sess.doc_id[sess_data.pos_in_sess[i]]]) * (sess_data.backward[i+1][1]-sess_data.backward[i+1][0]))));
                 }
                 else
                 {
-                    exam=forward[i-1][0]/(forward[i-1][0]+forward[i-1][1]);
-                    //click_rate[pos_in_sess[i]]+=exam*(1.-getgamma((st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i))*alpha[sess.doc_id[pos_in_sess[i]]]);
-                    addcgamma({st[i],en[i],docs[sess.doc_id[en[i]]].type,way[i],i,last_clk[i]},-alpha[sess.doc_id[pos_in_sess[i]]]/tot_p*prob*(forward[i-1][0]*backward[i+1][0]));
-                    calpha[sess.doc_id[pos_in_sess[i]]]+=-ga[i]/tot_p*prob*(forward[i-1][0]*backward[i+1][0]);
+                    atomic_fetch_add(calpha[sess.doc_id[sess_data.pos_in_sess[i]]].get(),(long long)(1e6*-ga[i]/sess_data.tot_p*prob*(sess_data.forward[i-1][0]*sess_data.backward[i+1][0])));
+                    addcgamma({sess_data.st[i],sess_data.en[i],docs[sess.doc_id[sess_data.en[i]]].type,sess_data.way[i],i,last_clk[i]},-alpha[sess.doc_id[sess_data.pos_in_sess[i]]]/sess_data.tot_p*prob*(sess_data.forward[i-1][0]*sess_data.backward[i+1][0]));
                 }
-        }
-        //UPD:cphi+=dphi*p_now/tot_p
-        double dfs(int now,double prob,Session &sess,bool upd=0)
-        {
-            /*/Only first one
-            if(now>1)
-            {
-                for(int i=ver_pos[1]+1;i<=DOCPERPAGE;++i)
-                {
-                    st[i]=ver_pos[1];
-                    en[i]=DOCPERPAGE+1;
-                    pos_in_sess[i]=i;
-                    way[i]=0;
-                }
-                return calc_seq_prob(prob,sess,upd);
             }
-            //Only first one*/
-            if(now==ver_pos.size())
-            {
-                for(int i=ver_pos[now-1]+1;i<=DOCPERPAGE;++i)
-                {
-                    pos_in_sess[i]=i;
-                    way[i]=0;
-                }
-                return calc_seq_prob(prob,sess,upd);
-            }
-            if(ver_pos[now]-ver_pos[now-1]==1)
-            {
-                pos_in_sess[ver_pos[now]]=ver_pos[now];
-                way[ver_pos[now]]=0;
-                return dfs(now+1,prob,sess,upd);
-            }
-            double ret=0;
-            if(ver_pos[now]-ver_pos[now-1]==2)
-            {
-                for(int i=ver_pos[now-1]+1;i<=ver_pos[now];++i)
-                {
-                    pos_in_sess[i]=i;
-                    way[i]=0;
-                }
-                dphi_id.push_back(phiid({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type}));
-                dphi.push_back(-1./(1.-getphi({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type})));//
-                ret+=dfs(now+1,prob*(1.-getphi({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type})),sess,upd);
-                dphi_id.pop_back();
-                dphi.pop_back();
-                for(int i=ver_pos[now-1]+1;i<=ver_pos[now];++i)
-                {
-                    pos_in_sess[i]=ver_pos[now-1]+ver_pos[now]-i+1;
-                    way[i]=1;
-                }
-                dphi_id.push_back(phiid({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type}));//
-                dphi.push_back(1./getphi({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type}));
-                ret+=dfs(now+1,prob*getphi({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type}),sess,upd);
-                dphi_id.pop_back();
-                dphi.pop_back();
-                return ret;
-            }
-            for(int i=ver_pos[now-1]+1;i<=ver_pos[now];++i)
-            {
-                pos_in_sess[i]=i;
-                way[i]=0;
-            }
-            dphi_id.push_back(phiid({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type}));
-            dphi.push_back(-1./(1.-getphi({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type})));//
-            ret+=dfs(now+1,prob*(1.-getphi({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type})),sess,upd);
-            dphi_id.pop_back();
-            dphi.pop_back();
-            for(int i=ver_pos[now-1]+1;i<=ver_pos[now];++i)
-            {
-                pos_in_sess[i]=ver_pos[now-1]+ver_pos[now]-i+1;
-                way[i]=1;
-            }
-            dphi_id.push_back(phiid({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type}));
-            dphi.push_back(1./getphi({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type}));//
-            dsigma_id.push_back(sigmaid({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type}));
-            dsigma.push_back(1./getsigma({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type}));//
-            ret+=dfs(now+1,prob*getphi({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type})*getsigma({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type}),sess,upd);
-            dphi_id.pop_back();
-            dphi.pop_back();
-            dsigma_id.pop_back();
-            dsigma.pop_back();
-            way[ver_pos[now-1]+1]=2;
-            pos_in_sess[ver_pos[now-1]+1]=ver_pos[now];
-            for(int i=ver_pos[now-1]+2;i<=ver_pos[now];++i)
-            {
-                pos_in_sess[i]=i-1;
-                way[i]=2;
-            }
-            dphi_id.push_back(phiid({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type}));
-            dphi.push_back(1./getphi({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type}));
-            dsigma_id.push_back(sigmaid({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type}));
-            dsigma.push_back(-1./(1.-getsigma({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type})));
-            ret+=dfs(now+1,prob*getphi({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type})*(1.-getsigma({ver_pos[now-1],ver_pos[now],docs[sess.doc_id[ver_pos[now]]].type})),sess,upd);
-            dphi_id.pop_back();
-            dphi.pop_back();
-            dsigma_id.pop_back();
-            dsigma.pop_back();
             return ret;
         }
-        void sess_prework(Session &sess)
+        double dfs(int now,double prob,Session &sess,bool upd,mvcm_sess_data &sess_data)
         {
-            ver_pos.clear();
-            ver_pos.push_back(0);
-            dphi.clear();
-            dphi_id.clear();
-            dsigma.clear();
-            dsigma_id.clear();
+            if(now==sess_data.ver_pos.size())
+            {
+                for(int i=sess_data.ver_pos[now-1]+1;i<=DOCPERPAGE;++i)
+                {
+                    sess_data.pos_in_sess[i]=i;
+                    sess_data.way[i]=0;
+                }
+                return calc_seq_prob(prob,sess,upd,sess_data);
+            }
+            if(sess_data.ver_pos[now]-sess_data.ver_pos[now-1]==1)
+            {
+                sess_data.pos_in_sess[sess_data.ver_pos[now]]=sess_data.ver_pos[now];
+                sess_data.way[sess_data.ver_pos[now]]=0;
+                return dfs(now+1,prob,sess,upd,sess_data);
+            }
+            double ret=0;
+            if(sess_data.ver_pos[now]-sess_data.ver_pos[now-1]==2)
+            {
+                for(int i=sess_data.ver_pos[now-1]+1;i<=sess_data.ver_pos[now];++i)
+                {
+                    sess_data.pos_in_sess[i]=i;
+                    sess_data.way[i]=0;
+                }
+                sess_data.dphi_id.push_back(phiid({sess_data.ver_pos[now-1],sess_data.ver_pos[now],docs[sess.doc_id[sess_data.ver_pos[now]]].type}));
+                sess_data.dphi.push_back(-1./(1.-getphi({sess_data.ver_pos[now-1],sess_data.ver_pos[now],docs[sess.doc_id[sess_data.ver_pos[now]]].type})));//
+                ret+=dfs(now+1,prob*(1.-getphi({sess_data.ver_pos[now-1],sess_data.ver_pos[now],docs[sess.doc_id[sess_data.ver_pos[now]]].type})),sess,upd,sess_data);
+                sess_data.dphi_id.pop_back();
+                sess_data.dphi.pop_back();
+                for(int i=sess_data.ver_pos[now-1]+1;i<=sess_data.ver_pos[now];++i)
+                {
+                    sess_data.pos_in_sess[i]=sess_data.ver_pos[now-1]+sess_data.ver_pos[now]-i+1;
+                    sess_data.way[i]=1;
+                }
+                sess_data.dphi_id.push_back(phiid({sess_data.ver_pos[now-1],sess_data.ver_pos[now],docs[sess.doc_id[sess_data.ver_pos[now]]].type}));//
+                sess_data.dphi.push_back(1./getphi({sess_data.ver_pos[now-1],sess_data.ver_pos[now],docs[sess.doc_id[sess_data.ver_pos[now]]].type}));
+                ret+=dfs(now+1,prob*getphi({sess_data.ver_pos[now-1],sess_data.ver_pos[now],docs[sess.doc_id[sess_data.ver_pos[now]]].type}),sess,upd,sess_data);
+                sess_data.dphi_id.pop_back();
+                sess_data.dphi.pop_back();
+                return ret;
+            }
+            for(int i=sess_data.ver_pos[now-1]+1;i<=sess_data.ver_pos[now];++i)
+            {
+                sess_data.pos_in_sess[i]=i;
+                sess_data.way[i]=0;
+            }
+            sess_data.dphi_id.push_back(phiid({sess_data.ver_pos[now-1],sess_data.ver_pos[now],docs[sess.doc_id[sess_data.ver_pos[now]]].type}));
+            sess_data.dphi.push_back(-1./(1.-getphi({sess_data.ver_pos[now-1],sess_data.ver_pos[now],docs[sess.doc_id[sess_data.ver_pos[now]]].type})));//
+            ret+=dfs(now+1,prob*(1.-getphi({sess_data.ver_pos[now-1],sess_data.ver_pos[now],docs[sess.doc_id[sess_data.ver_pos[now]]].type})),sess,upd,sess_data);
+            sess_data.dphi_id.pop_back();
+            sess_data.dphi.pop_back();
+            for(int i=sess_data.ver_pos[now-1]+1;i<=sess_data.ver_pos[now];++i)
+            {
+                sess_data.pos_in_sess[i]=sess_data.ver_pos[now-1]+sess_data.ver_pos[now]-i+1;
+                sess_data.way[i]=1;
+            }
+            sess_data.dphi_id.push_back(phiid({sess_data.ver_pos[now-1],sess_data.ver_pos[now],docs[sess.doc_id[sess_data.ver_pos[now]]].type}));
+            sess_data.dphi.push_back(1./getphi({sess_data.ver_pos[now-1],sess_data.ver_pos[now],docs[sess.doc_id[sess_data.ver_pos[now]]].type}));//
+            sess_data.dsigma_id.push_back(sigmaid({sess_data.ver_pos[now-1],sess_data.ver_pos[now],docs[sess.doc_id[sess_data.ver_pos[now]]].type}));
+            sess_data.dsigma.push_back(1./getsigma({sess_data.ver_pos[now-1],sess_data.ver_pos[now],docs[sess.doc_id[sess_data.ver_pos[now]]].type}));//
+            ret+=dfs(now+1,prob*getphi({sess_data.ver_pos[now-1],sess_data.ver_pos[now],docs[sess.doc_id[sess_data.ver_pos[now]]].type})*getsigma({sess_data.ver_pos[now-1],sess_data.ver_pos[now],docs[sess.doc_id[sess_data.ver_pos[now]]].type}),sess,upd,sess_data);
+            sess_data.dphi_id.pop_back();
+            sess_data.dphi.pop_back();
+            sess_data.dsigma_id.pop_back();
+            sess_data.dsigma.pop_back();
+            sess_data.way[sess_data.ver_pos[now-1]+1]=2;
+            sess_data.pos_in_sess[sess_data.ver_pos[now-1]+1]=sess_data.ver_pos[now];
+            for(int i=sess_data.ver_pos[now-1]+2;i<=sess_data.ver_pos[now];++i)
+            {
+                sess_data.pos_in_sess[i]=i-1;
+                sess_data.way[i]=2;
+            }
+            sess_data.dphi_id.push_back(phiid({sess_data.ver_pos[now-1],sess_data.ver_pos[now],docs[sess.doc_id[sess_data.ver_pos[now]]].type}));
+            sess_data.dphi.push_back(1./getphi({sess_data.ver_pos[now-1],sess_data.ver_pos[now],docs[sess.doc_id[sess_data.ver_pos[now]]].type}));
+            sess_data.dsigma_id.push_back(sigmaid({sess_data.ver_pos[now-1],sess_data.ver_pos[now],docs[sess.doc_id[sess_data.ver_pos[now]]].type}));
+            sess_data.dsigma.push_back(-1./(1.-getsigma({sess_data.ver_pos[now-1],sess_data.ver_pos[now],docs[sess.doc_id[sess_data.ver_pos[now]]].type})));
+            ret+=dfs(now+1,prob*getphi({sess_data.ver_pos[now-1],sess_data.ver_pos[now],docs[sess.doc_id[sess_data.ver_pos[now]]].type})*(1.-getsigma({sess_data.ver_pos[now-1],sess_data.ver_pos[now],docs[sess.doc_id[sess_data.ver_pos[now]]].type})),sess,upd,sess_data);
+            sess_data.dphi_id.pop_back();
+            sess_data.dphi.pop_back();
+            sess_data.dsigma_id.pop_back();
+            sess_data.dsigma.pop_back();
+            return ret;
+        }
+        void sess_prework(Session &sess,mvcm_sess_data &sess_data)
+        {
+            sess_data.ver_pos.clear();
+            sess_data.ver_pos.push_back(0);
+            sess_data.dphi.clear();
+            sess_data.dphi_id.clear();
+            sess_data.dsigma.clear();
+            sess_data.dsigma_id.clear();
             for(int i=1;i<=DOCPERPAGE;++i)
                 if(is_vertical(sess.doc_id[i]))
                 {
-                    ver_pos.push_back(i);
-                    for(int j=ver_pos[ver_pos.size()-2]+1;j<=ver_pos[ver_pos.size()-1];++j)
+                    sess_data.ver_pos.push_back(i);
+                    for(int j=sess_data.ver_pos[sess_data.ver_pos.size()-2]+1;j<=sess_data.ver_pos[sess_data.ver_pos.size()-1];++j)
                     {
-                        st[j]=ver_pos[ver_pos.size()-2];
-                        en[j]=ver_pos[ver_pos.size()-1];
+                        sess_data.st[j]=sess_data.ver_pos[sess_data.ver_pos.size()-2];
+                        sess_data.en[j]=sess_data.ver_pos[sess_data.ver_pos.size()-1];
                     }
                 }
-            for(int j=ver_pos[ver_pos.size()-1]+1;j<=DOCPERPAGE;++j)
+            for(int j=sess_data.ver_pos[sess_data.ver_pos.size()-1]+1;j<=DOCPERPAGE;++j)
             {
-                st[j]=ver_pos[ver_pos.size()-1];
-                en[j]=DOCPERPAGE+1;
+                sess_data.st[j]=sess_data.ver_pos[sess_data.ver_pos.size()-1];
+                sess_data.en[j]=DOCPERPAGE+1;
             }
-            memset(click_rate,0,sizeof(click_rate));
+            memset(sess_data.click_rate,0,sizeof(sess_data.click_rate));
         }
-        double tot_p;
-        void calc_prob(Session &sess,int upd)
+        void calc_prob(Session &sess,int upd,mvcm_sess_data &sess_data)
         {
-            sess_prework(sess);
-            /*if(sess.id==1)
-                cerr<<"BEGIN"<<click_rate[3]<<endl;/**/
-            tot_p=dfs(1,1.0,sess);
-            /*if(sess.id==1)
-            for(int i=1;i<=DOCPERPAGE;++i)
-                cerr<<click_rate[i]<<"\t";
-            if(sess.id==1)
-            cerr<<"ENDDD"<<endl;/**/
+            sess_prework(sess,sess_data);
+            sess_data.tot_p=dfs(1,1.0,sess,0,sess_data);
             if(upd==-1)
                 return;
-            memset(click_rate,0,sizeof(click_rate));
-            dfs(1,1.0,sess,1);
+            dfs(1,1.0,sess,1,sess_data);
         }
         void train()
         {
@@ -396,13 +391,15 @@ class mvcm:public model
             {
                 train_clear();
                 double maxdlt=0;
+                #pragma omp parallel for num_threads(4)
                 for(int id=0;id<sessions.size();++id)
                 {
                     auto &sess=sessions[id];
                     if(sess.enable==false||!istrain(sess,sess_cnt))//在没有Overfit可能性的模型里应写作istest，在需要验证集的模型里应写作!istrain
                         continue;
                     ++sess_cnt;
-                    calc_prob(sess,1);
+                    mvcm_sess_data sess_data;
+                    calc_prob(sess,1,sess_data);
                 }
                 maxd=0;
                 train_update();
@@ -424,14 +421,10 @@ class mvcm:public model
             double tmp[DOCPERPAGE+2];
             for(int i=0;i<=DOCPERPAGE;++i)
                 click_prob[i]=0;
-            /*for(v=1;v<=DOCPERPAGE;++v)
-                if(docs[sess.doc_id[v]].type>1)
-                    break;
-            if(v>DOCPERPAGE)
-                v=0;*/
-            calc_prob(sess,-1);
+            mvcm_sess_data sess_data;
+            calc_prob(sess,-1,sess_data);
             for(int i=0;i<=DOCPERPAGE;++i)
-                click_prob[i]=click_rate[i];
+                click_prob[i]=sess_data.click_rate[i];
 		}
 };
 #endif

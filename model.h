@@ -224,7 +224,8 @@ class model
                 position_skip[i]=0;
             }
             double click_prob[DOCPERPAGE+2];
-                double minn=1;
+            double minn=1;
+            #pragma omp parallel for num_threads(4)
 			for(auto &sess:sessions)
             {
                 if(sess.enable==false)
