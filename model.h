@@ -208,8 +208,9 @@ class model
         }
         void print_rel(string dir_name)
         {
-            string name=dir_name+"/"+name+".rel";
-            FILE* outfile=fopen(name.data(),"w");
+            string s_name=dir_name+"/"+name+".rel";
+            cerr<<s_name;
+            FILE* outfile=fopen(s_name.data(),"w");
             for(int i=0;i<docs.size();++i)
                 if(docs[i].name!="")
                 {
