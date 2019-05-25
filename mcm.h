@@ -11,7 +11,7 @@ class mcm:public model
         vector<double> alpha,beta,s_c,s_e;
         double get_rel(int id)
         {
-            return alpha[id]*(beta[id]*s_c[id]+(1.-beta[id])*s_e[id]);
+            return alpha[id]*(beta[docs[id].type]*s_c[id]+(1.-beta[docs[id].type])*s_e[id]);
         }
         void train_init()
         {
