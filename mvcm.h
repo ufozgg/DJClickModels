@@ -31,7 +31,7 @@ class mvcm:public model
         vector<int> first_vertical;
         double get_rel(int id)
         {
-            return alpha[id];
+            return alpha[id]*s_c[id];
         }
         void train_init()
         {
