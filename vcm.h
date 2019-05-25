@@ -12,6 +12,10 @@ class vcm:public model
         vector<int> doc_cnt;
         double protect[10];//={1e-4,0.2,0.1,0.07,0.04};
         double delta=0.1,dlt=0.9,eps=1e-3;
+        double get_rel(int id)
+        {
+            return alpha[id];
+        }
         void init()
         {
             int i,j;

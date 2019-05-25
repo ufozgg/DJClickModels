@@ -6,6 +6,10 @@ class ubmlayout:public model
     public:
         vector<double> gamma[DOCPERPAGE+2][DOCPERPAGE+2];
         vector<double> doc_rel2;
+        double get_rel(int id)
+        {
+            return doc_rel[id];
+        }
         void train()
         {
             name="Ubm_layout";

@@ -9,6 +9,10 @@ class mcm_simple_sgd:public model
         //alpha_cnt=train_cnt
         vector<double> alpha,s_c,calpha,cs_c;
         double dlt=0.5,ddlt=0.8,eps=1e-6;
+        double get_rel(int id)
+        {
+            return alpha[id]*s_c[id];
+        }
         void train_init()
         {
             name="Mcm_simple_sgd";

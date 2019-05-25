@@ -9,6 +9,10 @@ class mcm:public model
         //alpha_cnt=train_cnt
         vector<double> alpha1,alpha0,beta1,beta0,s_c1,s_c0,s_e1,s_e0;
         vector<double> alpha,beta,s_c,s_e;
+        double get_rel(int id)
+        {
+            return alpha[id]*(beta[id]*s_c[id]+(1.-beta[id])*s_e[id]);
+        }
         void train_init()
         {
             name="Mcm";
