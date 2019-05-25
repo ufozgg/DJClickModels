@@ -11,7 +11,7 @@ class vcm:public model
         vector<int> train_tim;
         vector<int> doc_cnt;
         double protect[10];//={1e-4,0.2,0.1,0.07,0.04};
-        double delta=0.1,dlt=0.9,eps=1e-3;
+        double delta=0.5,dlt=0.7,eps=1e-3;
         double get_rel(int id)
         {
             return alpha[id];

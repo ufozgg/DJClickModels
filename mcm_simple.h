@@ -8,7 +8,7 @@ class mcm_simple_sgd:public model
         double gamma[DOCPERPAGE+2][DOCPERPAGE+2],cgamma[DOCPERPAGE+2][DOCPERPAGE+2];
         //alpha_cnt=train_cnt
         vector<double> alpha,s_c,calpha,cs_c;
-        double dlt=0.5,ddlt=0.8,eps=1e-6;
+        double dlt=0.5,ddlt=0.7,eps=1e-6;
         double get_rel(int id)
         {
             return alpha[id]*s_c[id];

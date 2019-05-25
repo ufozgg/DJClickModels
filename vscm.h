@@ -9,7 +9,7 @@ class vscm:public model
         //alpha_cnt=train_cnt
         vector<double> alpha,s_c,calpha,cs_c;
         vector<vector<double>> phi,sigma,cphi,csigma;
-        double dlt=0.2,ddlt=0.9,eps=1e-6;
+        double dlt=0.5,ddlt=0.7,eps=1e-6;
         vector<int> first_vertical;
         double get_rel(int id)
         {
