@@ -201,10 +201,28 @@ class model
         }
         void load()
         {}
+        virtual double get_rel(int doc_id)=0;
+        void calc_ndcg()
+        {
+
+        }
+        void print_rel(string dir_name)
+        {
+            string name=dir_name+"/"+name+".rel";
+            FILE* outfile=fopen(name.data(),"w");
+            for(int i=0;i<docs.size();++i)
+                if(docs[i].name!="")
+                {
+                    fprintf(outfile,"%s",docs[i].name.data());
+                    fprintf(outfile,"\t%.8lf\n",get_rel(i));
+                }
+            fclose(outfile);
+        }
 		double test(bool out=true,int kind=2,int type=-1)
 		{
             if(out)
                 cout<<"Test Module "<<name<<endl;
+            print_rel("../rel");
             int i;
             double position_perplexity[DOCPERPAGE+1];
             double position_skip_perplexity[DOCPERPAGE+1];

@@ -11,6 +11,10 @@ class vscm:public model
         vector<vector<double>> phi,sigma,cphi,csigma;
         double dlt=0.2,ddlt=0.9,eps=1e-6;
         vector<int> first_vertical;
+        double get_rel(int id)
+        {
+            return alpha[id]*s_c[id];
+        }
         void train_init()
         {
             name="VSCM";

@@ -12,6 +12,10 @@ class dbn:public model
         {
             name="Dbn";
         }
+        double get_rel(int id)
+        {
+            return a[id]*s[id];
+        }
         void train()
         {
             

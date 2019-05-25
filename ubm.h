@@ -6,6 +6,10 @@ class ubm:public model
     public:
         double gamma[DOCPERPAGE+2][DOCPERPAGE+2];
         vector<double> doc_rel0,doc_rel1;
+        double get_rel(int id)
+        {
+            return doc_rel[id];
+        }
         void train()
         {
             name="Ubm";

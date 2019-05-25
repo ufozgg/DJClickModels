@@ -29,6 +29,10 @@ class mvcm:public model
         double maxd;
         double dlt=0.4,ddlt=0.7,eps=1e-6;
         vector<int> first_vertical;
+        double get_rel(int id)
+        {
+            return alpha[id];
+        }
         void train_init()
         {
             name="MVCM";

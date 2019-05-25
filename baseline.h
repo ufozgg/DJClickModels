@@ -5,6 +5,10 @@ class baseline:public model
 {
     public:
         vector<int> doc_cnt,doc_clk;
+        double get_rel(int id)
+        {
+            return doc_rel[id];
+        }
         void train()
         {
             name="Baseline:";

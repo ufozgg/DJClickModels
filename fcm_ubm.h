@@ -9,6 +9,10 @@ class fcm_ubm:public model
         vector<double> yita[DOCPERPAGE+2],AP[DOCPERPAGE+2],yita0[DOCPERPAGE+2],yita1[DOCPERPAGE+2],AP0[DOCPERPAGE+2],AP1[DOCPERPAGE+2];
         vector<double> alpha,alpha0,alpha1;
         vector<int> mindiss;
+        double get_rel(int id)
+        {
+            return alpha[id];
+        }
         void init()
         {
             alpha.resize(docs.size()+2);

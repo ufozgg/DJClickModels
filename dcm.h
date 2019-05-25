@@ -107,6 +107,10 @@ class dcm:public model
                 }
             fclose(outfile);
         }
+        double get_rel(int id)
+        {
+            return doc_rel[id];
+        }
         void load()
         {
             FILE* infile=fopen("../output/dcm_args","r");
