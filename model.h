@@ -222,8 +222,10 @@ class model
 		double test(bool out=true,int kind=2,int type=-1)
 		{
             if(out)
+            {
                 cout<<"Test Module "<<name<<endl;
-            print_rel("../rel");
+                print_rel("../rel");
+            }
             int i;
             double position_perplexity[DOCPERPAGE+1];
             double position_skip_perplexity[DOCPERPAGE+1];
