@@ -90,7 +90,8 @@ class mvcm:public model
         }
         bool is_vertical(int &x)
         {
-            return docs[x].type>1&&docs[x].type<9||docs[x].type==10||docs[x].type==14||docs[x].type==15;
+            return docs[x].type>1;
+            //return docs[x].type>1&&docs[x].type<9||docs[x].type==10||docs[x].type==14||docs[x].type==15;
         }
         void clear_vec(vector<double> &arg,vector<shared_ptr<atomic<long long>>> &dt,double A=pr,double B=pr)
         {
@@ -414,6 +415,17 @@ class mvcm:public model
                     cerr<<"Round:\t"<<round<<"\tLL:\t"<<"\t"<<this->test(false,2)<<"\t"<<dlt<<"\t"<<maxd<<endl;
                 last_ll=now_ll;
                 dlt*=ddlt;
+                for(int k=0;k<=MAXVERTICLE;++k)
+                {
+                    double summ=0;
+                    for(int i=0;i<DOCPERPAGE;++i)
+                        for(int j=1;j<=DOCPAEPRGE;++j)
+                        {
+                            summ+=phi[i][j][k];
+                        }
+                    cerr<<summ<<"\t";
+                }
+                cerr<<endl;
             }
         }
         void load()
