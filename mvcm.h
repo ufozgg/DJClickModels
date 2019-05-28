@@ -31,11 +31,13 @@ class mvcm:public model
         vector<int> first_vertical;
         double get_rel(int id)
         {
+            //return alpha[id]+s_c[id];
+            //return s_c[id];
             return alpha[id]*s_c[id];
         }
         void train_init()
         {
-            name="MVCM";
+            name="MVCM_sconly_add";
             int i,j;
             doc_rel=vector<double>(docs.size()+1);
             alpha=vector<double>(docs.size()+1);

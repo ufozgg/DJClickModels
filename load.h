@@ -74,8 +74,8 @@ bool line_Data_clc(const string &line,int type)
 	now=Session();
 	now.id=now_id;
 	now.begin_time=atof(res[6].data());
-	if(now.begin_time<1000000000||now.begin_time>1800000000)
-		return 0;
+	/*if(now.begin_time<1000000000||now.begin_time>1800000000)
+		return 0;*/
 	tim_div.push_back(now.begin_time);
 	if(!qryadd(res[0],now))
 		return 0;
