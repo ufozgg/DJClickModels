@@ -419,7 +419,7 @@ class mvcm:public model
                 {
                     double summ=0;
                     for(int i=0;i<DOCPERPAGE;++i)
-                        for(int j=1;j<=DOCPERPRGE;++j)
+                        for(int j=1;j<=DOCPERPAGE;++j)
                         {
                             summ+=phi[i][j][k];
                         }
