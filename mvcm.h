@@ -421,7 +421,7 @@ class mvcm:public model
                     for(int i=0;i<DOCPERPAGE;++i)
                         for(int j=1;j<=DOCPERPAGE;++j)
                         {
-                            summ+=phi[i][j][k];
+                            summ+=getphi({i,j,k});
                         }
                     cerr<<summ<<"\t";
                 }
