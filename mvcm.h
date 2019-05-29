@@ -101,7 +101,7 @@ class mvcm:public model
             {
                 //dt[i]=(long long)(1e6*(A/arg[i]-B/(1.-arg[i])));
                 //atomic_init(dt[i].get(),(long long)(1e6*(A/arg[i]-B/(1.-arg[i]))));
-                atomic_init(dt[i].get(),(long long)(1e6*((A/arg[i]-B/(1.-arg[i]))*pow(arg[i],A)*pow(1.-arg[i],B))));
+                atomic_init(dt[i].get(),(long long)(1e6*((A/arg[i]-B/(1.-arg[i])))));
             }
         }
         void train_clear()
