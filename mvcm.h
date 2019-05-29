@@ -90,7 +90,7 @@ class mvcm:public model
         }
         bool is_vertical(int &x)
         {
-            return docs[x].type>=4&&docs[x].type<=8||docs[x].type==14||docs[x].type>=16;
+            return docs[x].type>1;//||docs[x].type==7||docs[x].type==8;//||docs[x].type==14||docs[x].type>=16;
             //return docs[x].type>1&&docs[x].type<9||docs[x].type==10||docs[x].type==14||docs[x].type==15;
         }
         void clear_vec(vector<double> &arg,vector<shared_ptr<atomic<long long>>> &dt,double A=pr,double B=pr)
