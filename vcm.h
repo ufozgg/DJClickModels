@@ -78,8 +78,8 @@ class vcm:public model
             static const double pr=1,clb=-.5,cub=.5;
             for(i=0;i<=docs.size();++i)
             {
-                calpha[i]=pr*(1./alpha[i]-1./(1.-alpha[i]));
-                cbeta[i]=pr*(1./beta[i]-1./(1.-beta[i]));//pr*(1./((beta[i]+1)/2)-1./(1.-(beta[i]+1)/2));
+                calpha[i]=getdbeta(beta[i],pr,pr);
+                cbeta[i]=getdbeta(beta[i],pr,pr);
                 ccita[i]=2*pr*(1./((cita[i]-clb)/(cub-clb))-1./(1.-(cita[i]-clb)/(cub-clb)));
                 /*if(train_tim[i])
                 {
@@ -93,13 +93,13 @@ class vcm:public model
             {
                 for(j=0;j<=MAXVERTICLE;++j)
                 {
-                    cphi[i][j]=pr*(1./phi[i][j]-1./(1.-phi[i][j]));
-                    csigma[i][j]=pr*(1./sigma[i][j]-1./(1.-sigma[i][j]));
+                    cphi[i][j]=getdbeta(phi[i][j],pr,pr);
+                    csigma[i][j]=getdbeta(sigma[i][j],pr,pr);
                 }
             }
             for(i=0;i<=DOCPERPAGE;++i)
                 for(j=0;j<=DOCPERPAGE;++j)
-                    cgamma[i][j]=pr*(1./gamma[i][j]-1./(1.-gamma[i][j]));
+                    cgamma[i][j]=getdbeta(gamma[i][j],pr,pr);
         }
         void update_num(double &p,double add,double prc=1e-6,double lb=0.,double hb=1.)
         {

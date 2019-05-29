@@ -100,7 +100,8 @@ class mvcm:public model
             for(int i=0;i<arg.size();++i)
             {
                 //dt[i]=(long long)(1e6*(A/arg[i]-B/(1.-arg[i])));
-                atomic_init(dt[i].get(),(long long)(1e6*(A/arg[i]-B/(1.-arg[i]))));
+                //atomic_init(dt[i].get(),(long long)(1e6*(A/arg[i]-B/(1.-arg[i]))));
+                atomic_init(dt[i].get(),(long long)(1e6*((A/arg[i]-B/(1.-arg[i]))*pow(arg[i],A)*pow(1.-arg[i],B))));
             }
         }
         void train_clear()

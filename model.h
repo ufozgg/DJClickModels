@@ -2,6 +2,7 @@
 #define MODEL_H
 //#define double long double
 //#include<alghorithms>
+extern double pr;
 bool istest(Session &sess,int cnt)
 {
     if(sess.kind)
@@ -218,6 +219,10 @@ class model
                     fprintf(outfile,"\t%.8lf\n",get_rel(i));
                 }
             fclose(outfile);
+        }
+        double getdbeta(const double arg,const double A=pr,const double B=pr)
+        {
+            return (A/arg-B/(1.-arg))*pow(arg,A)*pow(1.-arg,B);
         }
 		double test(bool out=true,int kind=2,int type=-1)
 		{
