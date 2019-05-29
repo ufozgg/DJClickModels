@@ -222,7 +222,7 @@ class model
         }
         double getdbeta(const double arg,const double A=pr,const double B=pr)
         {
-            return (A/arg-B/(1.-arg))*pow(arg,A)*pow(1.-arg,B);
+            return (A/arg-B/(1.-arg));/*pow(arg,A)*pow(1.-arg,B);*/
         }
 		double test(bool out=true,int kind=2,int type=-1)
 		{
