@@ -416,6 +416,7 @@ class mvcm:public model
                 //now_ll=this->test(false,1);
                 //if(round%20==0)
                 //    cerr<<"Round:\t"<<round<<"\tLL:\t"<<"\t"<<this->test(false,2)<<"\t"<<dlt<<"\t"<<maxd<<endl;
+                cerr<<round<<"\t"<<dlt<<endl;
                 if(dlt<1e-6)
                 {
                     dlt=0.1;
