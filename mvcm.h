@@ -433,9 +433,12 @@ class mvcm:public model
                         {
                             ppr[i]=pr0[i];
                             if(rand()&1)
-                                pr0[i]+=prd;
-                            else
-                                pr0[i]=max(pr0[i]-prd,1e-2);
+                            {
+                                if(rand()&1)
+                                    pr0[i]+=prd;
+                                else
+                                    pr0[i]=max(pr0[i]-prd,1e-2);
+                            }
                         }
                         Lalpha.assign(alpha.begin(),alpha.end());
                         Lgamma.assign(gamma.begin(),gamma.end());
