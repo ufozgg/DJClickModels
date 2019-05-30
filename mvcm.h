@@ -439,6 +439,7 @@ class mvcm:public model
                         }
                         tag=1;
                     }
+
                     else//if(tag==1)
                     {
                         now_ll=this->test(false,2);
@@ -446,7 +447,7 @@ class mvcm:public model
                         {
                             for(int i=0;i<10;++i)
                                 pr0[i]=ppr[i];
-                            cerrr<<"Not ok"<<endl;
+                            cerr<<"Not ok"<<endl;
                         }
                         else
                         {
