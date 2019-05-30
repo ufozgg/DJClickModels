@@ -437,6 +437,11 @@ class mvcm:public model
                             else
                                 pr0[i]=max(pr0[i]-prd,1e-2);
                         }
+                        Lalpha.assign(alpha.begin(),alpha.end());
+                        Lgamma.assign(gamma.begin(),gamma.end());
+                        Ls_c.assign(s_c.begin(),s_c.end());
+                        Lphi.assign(phi.begin(),phi.end());
+                        Lsigma.assign(sigma.begin(),sigma.end());
                         tag=1;
                     }
 
@@ -447,6 +452,11 @@ class mvcm:public model
                         {
                             for(int i=0;i<10;++i)
                                 pr0[i]=ppr[i];
+                            alpha.assign(Lalpha.begin(),Lalpha.end());
+                            gamma.assign(Lgamma.begin(),Lgamma.end());
+                            s_c.assign(Ls_c.begin(),Ls_c.end());
+                            phi.assign(Lphi.begin(),Lphi.end());
+                            sigma.assign(Lsigma.begin(),Lsigma.end());
                             cerr<<"Not ok"<<endl;
                         }
                         else
@@ -454,8 +464,9 @@ class mvcm:public model
                             for(int i=0;i<10;++i)
                                 cerr<<pr0[i]<<"\t";
                             cerr<<now_ll<<endl;
+                            last_ll=now_ll;
                         }
-                        tag=0;
+                        //tag=0;
                     }
                     prd*=prdlt;
                 }
