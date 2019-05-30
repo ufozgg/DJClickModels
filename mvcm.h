@@ -24,6 +24,7 @@ class mvcm:public model
         vector<double> sigma;
         vector<int> arggamma,argphi,argsigma;
         vector<double> alpha,s_c;
+        vector<double Lalpha,Ls_c,Lgamma,Lphi,Lsigma;
         vector<shared_ptr<atomic<long long>>> cgamma,cphi,csigma,calpha,cs_c;
         //vector<double> cgamma,cphi,csigma,calpha,cs_c;
         double maxd;
@@ -42,6 +43,8 @@ class mvcm:public model
             doc_rel=vector<double>(docs.size()+1);
             alpha=vector<double>(docs.size()+1);
             s_c=vector<double>(docs.size()+1);
+            Lalpha=vector<double>(docs.size()+1);
+            Ls_c=vector<double>(docs.size()+1);
             for(int i=0;i<=docs.size();++i)
             {
                 alpha[i]=s_c[i]=0.5;
@@ -58,6 +61,7 @@ class mvcm:public model
             for(auto i:arggamma)
                 siz*=i;
             gamma.resize(siz+2);
+            Lgamma.resize(siz+2);
             for(int i=0;i<=siz+2;++i)
             {
                 cgamma.push_back(shared_ptr<atomic<long long> >(new atomic<long long>(0)));
@@ -67,6 +71,7 @@ class mvcm:public model
             for(auto i:argsigma)
                 siz*=i;
             sigma.resize(siz+2);
+            Lsigma.resize(siz+2);
             for(int i=0;i<=siz+2;++i)
             {
                 csigma.push_back(shared_ptr<atomic<long long> >(new atomic<long long>(0)));
@@ -76,6 +81,7 @@ class mvcm:public model
             for(auto i:argphi)
                 siz*=i;
             phi.resize(siz+2);
+            Lphi.resize(siz+2);
             for(int i=0;i<=siz+2;++i)
             {
                 cphi.push_back(shared_ptr<atomic<long long> >(new atomic<long long>(0)));
@@ -433,7 +439,7 @@ class mvcm:public model
                         }
                         tag=1;
                     }
-                    if(tag==1)
+                    else//if(tag==1)
                     {
                         now_ll=this->test(false,2);
                         if(now_ll<last_ll)
