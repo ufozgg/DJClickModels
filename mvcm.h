@@ -395,7 +395,7 @@ class mvcm:public model
             double last_ll=-100,now_ll;
             int last_clk,sess_cnt=0;
             train_init();
-            double prd=1.,prdlt=0.9,ppr[10];
+            double prd=1.,prdlt=0.98,ppr[10];
             int tag=0;
             for(int round=1;round<=MAXROUND;++round)
             {
@@ -416,8 +416,8 @@ class mvcm:public model
                 //now_ll=this->test(false,1);
                 //if(round%20==0)
                 //    cerr<<"Round:\t"<<round<<"\tLL:\t"<<"\t"<<this->test(false,2)<<"\t"<<dlt<<"\t"<<maxd<<endl;
-                cerr<<round<<"\t"<<dlt<<endl;
-                if(dlt<1e-6)
+                //cerr<<round<<"\t"<<dlt<<endl;
+                if(dlt<1e-4)
                 {
                     dlt=0.1;
                     if(tag==0)

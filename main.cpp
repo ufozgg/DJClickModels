@@ -58,7 +58,7 @@ int main(int argc,char* argv[])
 	pa.add<std::string>("usetrained",'u',"if true ,not train ,load args from file",false,"false");
 	pa.add<std::string>("enable",'e',"args for mvcm",false,"111111111");
 	pa.add<std::string>("pr",'p',"smooth val",false,"1.0");
-	pa.add<std::string>("pr0",'P',"smooth val for mvcm",false,"1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0");
+	pa.add<std::string>("pr0",'P',"smooth val for mvcm",false,"2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0");
 	pa.parse_check(argc,argv);
 	pr=stod(pa.get<std::string>("pr"));
 	vector<string> pr0_str=split(pa.get<std::string>("pr0"),',');
