@@ -24,7 +24,7 @@ class mvcm:public model
         vector<double> sigma;
         vector<int> arggamma,argphi,argsigma;
         vector<double> alpha,s_c;
-        vector<double Lalpha,Ls_c,Lgamma,Lphi,Lsigma;
+        vector<double> Lalpha,Ls_c,Lgamma,Lphi,Lsigma;
         vector<shared_ptr<atomic<long long>>> cgamma,cphi,csigma,calpha,cs_c;
         //vector<double> cgamma,cphi,csigma,calpha,cs_c;
         double maxd;
