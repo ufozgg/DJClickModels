@@ -440,10 +440,14 @@ class mvcm:public model
                         {
                             for(int i=0;i<10;++i)
                                 pr0[i]=ppr[i];
+                            cerrr<<"Not ok"<<endl;
                         }
-                        for(int i=0;i<10;++i)
-                            cerr<<pr0[i]<<"\t";
-                        cerr<<now_ll<<endl;
+                        else
+                        {
+                            for(int i=0;i<10;++i)
+                                cerr<<pr0[i]<<"\t";
+                            cerr<<now_ll<<endl;
+                        }
                         tag=0;
                     }
                     prd*=prdlt;
