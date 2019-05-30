@@ -395,6 +395,8 @@ class mvcm:public model
             double last_ll=-100,now_ll;
             int last_clk,sess_cnt=0;
             train_init();
+            double prd=1.,prdlt=0.9,ppr[10];
+            int tag=0;
             for(int round=1;round<=MAXROUND;++round)
             {
                 train_clear();
@@ -412,10 +414,41 @@ class mvcm:public model
                 maxd=0;
                 train_update();
                 //now_ll=this->test(false,1);
-                if(round%20==0)
-                    cerr<<"Round:\t"<<round<<"\tLL:\t"<<"\t"<<this->test(false,2)<<"\t"<<dlt<<"\t"<<maxd<<endl;
-                last_ll=now_ll;
+                //if(round%20==0)
+                //    cerr<<"Round:\t"<<round<<"\tLL:\t"<<"\t"<<this->test(false,2)<<"\t"<<dlt<<"\t"<<maxd<<endl;
+                if(dlt<1e-6)
+                {
+                    dlt=0.1;
+                    if(tag==0)
+                    {
+                        last_ll=this->test(false,2);
+                        for(int i=0;i<10;++i)
+                        {
+                            ppr[i]=pr0[i];
+                            if(rand()&1)
+                                pr0[i]+=prd;
+                            else
+                                pr0[i]=max(pr0[i]-prd,1e-2);
+                        }
+                        tag=1;
+                    }
+                    if(tag==1)
+                    {
+                        now_ll=this->test(false,2);
+                        if(now_ll<last_ll)
+                        {
+                            for(int i=0;i<10;++i)
+                                pr0[i]=ppr[i];
+                        }
+                        for(int i=0;i<10;++i)
+                            cerr<<pr0[i]<<"\t";
+                        cerr<<now_ll<<endl;
+                        tag=0;
+                    }
+                    prd*=prdlt;
+                }
                 dlt*=ddlt;
+                /*last_ll=now_ll;
                 for(int k=0;k<=MAXVERTICLE;++k)
                 {
                     double summ=0;
@@ -426,7 +459,7 @@ class mvcm:public model
                         }
                     cerr<<summ<<"\t";
                 }
-                cerr<<endl;
+                cerr<<endl;*/
             }
         }
         void load()
