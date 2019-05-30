@@ -429,29 +429,12 @@ class mvcm:public model
                     if(tag==0)
                     {
                         last_ll=this->test(false,2);
-                        for(int i=0;i<10;++i)
-                        {
-                            ppr[i]=pr0[i];
-                            if(rand()&1)
-                            {
-                                if(rand()&1)
-                                    pr0[i]+=prd;
-                                else
-                                    pr0[i]=max(pr0[i]-prd,1e-2);
-                            }
-                        }
-                        Lalpha.assign(alpha.begin(),alpha.end());
-                        Lgamma.assign(gamma.begin(),gamma.end());
-                        Ls_c.assign(s_c.begin(),s_c.end());
-                        Lphi.assign(phi.begin(),phi.end());
-                        Lsigma.assign(sigma.begin(),sigma.end());
                         tag=1;
                     }
-
-                    else//if(tag==1)
+                    else
                     {
                         now_ll=this->test(false,2);
-                        if(now_ll<last_ll)
+                        if(now_ll<=last_ll)
                         {
                             for(int i=0;i<10;++i)
                                 pr0[i]=ppr[i];
@@ -460,17 +443,34 @@ class mvcm:public model
                             s_c.assign(Ls_c.begin(),Ls_c.end());
                             phi.assign(Lphi.begin(),Lphi.end());
                             sigma.assign(Lsigma.begin(),Lsigma.end());
-                            cerr<<"Not ok"<<endl;
+                            cerr<<"Not ok"<<prd<<endl;
                         }
                         else
                         {
                             for(int i=0;i<10;++i)
                                 cerr<<pr0[i]<<"\t";
-                            cerr<<now_ll<<endl;
+                            cerr<<now_ll<<prd<<endl;
                             last_ll=now_ll;
                         }
-                        //tag=0;
                     }
+                    
+                    for(int i=0;i<10;++i)
+                    {
+                        ppr[i]=pr0[i];
+                        if(rand()&1)
+                        {
+                            if(rand()&1)
+                                pr0[i]+=prd;
+                            else
+                                pr0[i]=max(pr0[i]-prd,1e-2);
+                        }
+                    }
+                    Lalpha.assign(alpha.begin(),alpha.end());
+                    Lgamma.assign(gamma.begin(),gamma.end());
+                    Ls_c.assign(s_c.begin(),s_c.end());
+                    Lphi.assign(phi.begin(),phi.end());
+                    Lsigma.assign(sigma.begin(),sigma.end());
+                    
                     prd*=prdlt;
                 }
                 dlt*=ddlt;
