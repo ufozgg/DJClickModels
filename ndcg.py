@@ -2,8 +2,9 @@
 import os, shutil
 import json
 import math
+import random
 from urllib.parse import quote
-n = 10 #n of ndcg
+n = 1 #n of ndcg
 signed_query={}
 
 json_str = input()
@@ -11,11 +12,11 @@ SRR = json.loads(json_str)
 flag=0
 
 for query in SRR:
-	query_word=quote(query["query"].encode('gb2312',errors='ignore'), 'gb2312')
+	query_word=quote(query["query"].encode('gb2312',errors='ignore'), 'gb2312').strip()
 	if query_word not in signed_query:
 		signed_query[query_word] = {"sign":{}}
 	for i in range(10):
-		doc_name=str(query["results"][str(i)]["url"])
+		doc_name=str(query["results"][str(i)]["url"]).strip()
 		doc_rel=int(query["results"][str(i)]["relevance"])
 		signed_query[query_word]["sign"][doc_name] = doc_rel
 
@@ -26,7 +27,7 @@ in_file = open('../zhangjunqi_magic/query_id','r',errors='ignore')
 line = in_file.readline()
 while line:
 	[query,iid]=line.strip().split('\t')
-	id2query[iid]=quote(query.encode('gb2312',errors='ignore'), 'gb2312')
+	id2query[iid.strip()]=quote(query.encode('gb2312',errors='ignore'), 'gb2312').strip()
 	line = in_file.readline()
 
 in_file = open('../zhangjunqi_magic/url_id','r',errors='ignore')
@@ -40,7 +41,7 @@ work_dir = '../rel'
 
 model_name=[]
 ndcg={}
-
+ndcg["random"]=0
 for parent, dirnames, filenames in os.walk(work_dir,  followlinks=True):
 	for filename in filenames:
 		if filename[0] == '.':
@@ -55,6 +56,8 @@ for parent, dirnames, filenames in os.walk(work_dir,  followlinks=True):
 		while line:
 			try:
 				[doc_name,doc_rel] = line.strip().split('\t')
+				doc_name=doc_name.strip()
+				doc_rel=doc_rel.strip()
 				[query_word,doc_name] = doc_name.split('#')
 				if query_word in id2query:
 					query_word=id2query[query_word]
@@ -96,6 +99,12 @@ def calc_query(query,mods):
 		#indcg+=(seq[i][1])/math.log(i+2,2)
 	if indcg<1e-9:
 		return False
+	random.shuffle(seq)
+	rndcg=0
+	for i in range(n):
+		rndcg+=(pow(2.0,seq[i][1]-1.)-1.)/math.log(i+2,2)
+	ndcg["random"]+=rndcg/indcg
+
 	for mod in mods:
 		#print(query.keys())
 		if mod not in query:
@@ -119,7 +128,4 @@ for query in signed_query.values():
 print(cnt)
 for mod in model_name:
 	print(mod+'\t'+str(ndcg[mod]/cnt))
-
-input_of_ranking = open('../output/ranking_all','w')
-for query in signed_query.values():
-	
+print('random\t'+str(ndcg["random"]/cnt))

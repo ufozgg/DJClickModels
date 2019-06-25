@@ -13,6 +13,69 @@ void data_mining()
 	cerr<<querys.size()<<endl;
 	vector<pair<int,double>> tmpp;
 	FILE* tmp_f;
+	#ifdef REVISITTEST
+	int co[2][12][12],v[2][12];
+	memset(co,0,sizeof(co));
+	memset(v,0,sizeof(v));
+	for(auto &query:querys)
+		if(query.enable)
+		{
+			for(int i=query.last;i>0;i=sessions[i].query_nex)
+			{
+				Session &sess=sessions[i];
+				if(!sess.enable)
+					continue;
+				for(int i=1;i<=10;++i)
+					if(sess.click_time[i]>1)
+					{
+						++v[(docs[sess.doc_id[i]].type>1)][i];
+						bool flag=false;
+						for(int j=i+1;j<=10;++j)
+							if(sess.click_time[j]>1&&sess.click_time[j]<sess.click_time[i])
+							{
+								flag=(docs[sess.doc_id[j]].type>1);
+								++co[flag][i][j];
+								break;
+							}
+					}
+			}
+		}
+	for(int i=1;i<=10;++i)
+	{
+		for(int j=1;j<=10;++j)
+			cerr<<co[0][i][j]/(co[0][i][j]+co[1][i][j]+0.01)-v[0][j]/(v[0][j]+v[1][j]+0.01)<<",";
+		cerr<<endl;
+	}
+	cerr<<endl;
+	for(int i=1;i<=10;++i)
+	{
+		for(int j=1;j<=10;++j)
+			cerr<<co[1][i][j]<<",";
+		cerr<<endl;
+	}
+	#endif
+	#ifdef VERTICALTYPECNT
+	int type_cnt[MAXVERTICLE+2]={};
+	for(int i=0;i<=MAXVERTICLE;++i)
+		type_cnt[i]=0;
+	for(auto &query:querys)
+		if(query.enable)
+		{
+			Vc=V=0;
+			for(int i=query.last;i>0;i=sessions[i].query_nex)
+			{
+				Session &sess=sessions[i];
+				sess.type=0;
+				for(int i=1;i<=DOCPERPAGE;++i)
+					++type_cnt[docs[sess.doc_id[i]].type];
+			}
+		}
+	for(int i=0;i<=MAXVERTICLE;++i)
+	{
+		cerr<<type_cnt[i]<<"\t";
+	}
+	cerr<<endl;
+	#endif
 	#ifdef VERTICALCNT
 	for(auto &query:querys)
 		if(query.enable)

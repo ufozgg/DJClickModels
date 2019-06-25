@@ -423,7 +423,7 @@ class mvcm:public model
                 //if(round%20==0)
                 //    cerr<<"Round:\t"<<round<<"\tLL:\t"<<"\t"<<this->test(false,2)<<"\t"<<dlt<<"\t"<<maxd<<endl;
                 //cerr<<round<<"\t"<<dlt<<endl;
-                if(dlt<1e-4)
+                if(false)
                 {
                     dlt=0.1;
                     if(tag==0)

@@ -196,6 +196,7 @@ bool read_ucf_file(string file_name,int type=0)
 	//Session x=Session();
 	//qryadd("X!",x);
 	cout<<"Read "<<cnt<<" Lines\n";
+	cerr<<docs.size()<<"\t"<<sessions.size()<<"\t"<<querys.size()<<endl;
 	infile.close();
 	return true;
 }
