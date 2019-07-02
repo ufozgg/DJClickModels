@@ -23,6 +23,7 @@ Don't use after 2027A.D.
 #include"mcm3.h"
 #include"vcm.h"
 #include"mvcm.h"
+#include"mvcm2.h"
 #include"vscm.h"
 #include"mcm_sgd.h"
 #include"mcm_simple.h"
@@ -324,6 +325,36 @@ int main(int argc,char* argv[])
 			vcm_mod.sample();
 		#ifdef DEBUG
 			vcm_mod.check();
+		#endif
+	}
+	if(find(mods.begin(),mods.end(),"mvcm2")!=mods.end())
+	{
+		mvcm2 mvcm2_mod=mvcm2();
+		if(datas[0]!="none")
+			mvcm2_mod.train();
+		else
+			mvcm2_mod.load();
+		
+		if(pa.get<std::string>("sample")=="testdata")
+		{
+			mvcm2_mod.sample_testdata();//TODO: xxx
+		}
+		else
+		{
+			mvcm2_mod.test();
+		}
+		if(pa.get<std::string>("typetest")=="true")
+		{
+			cout<<"Type test ubm:\n";
+			for(int i=0;i<=DOCPERPAGE;++i)
+				cout<<mvcm2_mod.test(false,2,i)<<"\t";
+			cout<<endl;
+		}
+		mvcm2_mod.dump_rel();
+		if(pa.get<std::string>("sample")=="true")
+			mvcm2_mod.sample();
+		#ifdef DEBUG
+			mvcm2_mod.check();
 		#endif
 	}
 	if(find(mods.begin(),mods.end(),"mvcm")!=mods.end())
