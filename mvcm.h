@@ -9,8 +9,8 @@ extern double pr0[10];
 class mvcm_sess_data
 {
     public:
-    double click_rate[DOCPERPAGE+2],forward[DOCPERPAGE+2][2],backward[DOCPERPAGE+2][2];
-    int pos_in_sess[DOCPERPAGE+2],st[DOCPERPAGE+2],en[DOCPERPAGE+2],way[DOCPERPAGE+2];
+    double click_rate[DOCPERPAGE+3],forward[DOCPERPAGE+3][2],backward[DOCPERPAGE+3][2];
+    int pos_in_sess[DOCPERPAGE+3],st[DOCPERPAGE+3],en[DOCPERPAGE+3],way[DOCPERPAGE+3];
     vector<int> ver_pos;
     vector<int> dphi_id,dsigma_id;
     vector<double> dphi,dsigma;

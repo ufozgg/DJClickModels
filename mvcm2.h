@@ -38,7 +38,7 @@ class mvcm2:public model
         }
         void train_init()
         {
-            name="MVCM_sconly_add";
+            name="MVCM2";
             int i,j;
             doc_rel=vector<double>(docs.size()+1);
             alpha=vector<double>(docs.size()+1);
@@ -99,7 +99,7 @@ class mvcm2:public model
         }
         bool is_vertical(int &x)
         {
-            return docs[x].type>1;//||docs[x].type==7||docs[x].type==8;//||docs[x].type==14||docs[x].type>=16;
+            return x==0||docs[x].type>1&&docs[x].type!=3;//||docs[x].type==7||docs[x].type==8;//||docs[x].type==14||docs[x].type>=16;
             //return docs[x].type>1&&docs[x].type<9||docs[x].type==10||docs[x].type==14||docs[x].type==15;
         }
         void clear_vec(vector<double> &arg,vector<shared_ptr<atomic<long long>>> &dt,double A=pr,double B=pr)
@@ -215,20 +215,28 @@ class mvcm2:public model
         /*gamma 上一个Vertical的位置（没有则记为0），当前Vertical的位置，当前Vertical类型，当前顺序，结果位置，上一个点击位置*/
         double calc_seq_prob(double prob,Session &sess,bool upd,mvcm_sess_data &sess_data)
         {
+            //cerr<<"WW"<<sess_data.pos_in_sess[1]<<endl;
             memset(sess_data.forward,0,sizeof(sess_data.forward));
             memset(sess_data.backward,0,sizeof(sess_data.backward));
             sess_data.forward[0][0]=1;
-            sess_data.backward[DOCPERPAGE+1][0]=sess_data.backward[DOCPERPAGE+1][1]=1;
+            sess_data.backward[DOCPERPAGE+2][0]=sess_data.backward[DOCPERPAGE+2][1]=1;
             int last_clk[DOCPERPAGE+2],last_ver=0;
             memset(last_clk,0,sizeof(last_clk));
             double ret=prob,exam;
             last_clk[0]=last_clk[1]=0;
             double ga[DOCPERPAGE+2],al[DOCPERPAGE+2],sc[DOCPERPAGE+2],be[DOCPERPAGE+2];
-            for(int i=1;i<=DOCPERPAGE;++i)
+            sess.click_time[11]=-1;
+            sess.doc_id[11]=0;
+            //cerr<<"WW"<<sess_data.pos_in_sess[1]<<endl;
+            for(int i=1;i<=DOCPERPAGE+1;++i)
             {
+                //cerr<<i<<" "<<DOCPERPAGE+1<<endl;
                 ga[i]=getgamma({sess_data.st[i],sess_data.en[i],docs[sess.doc_id[sess_data.en[i]]].type,sess_data.way[i],i,last_clk[i]});
+                //cerr<<i<<sess_data.pos_in_sess[i]<<endl;
                 al[i]=(sess_data.way[i]==0?alpha[sess.doc_id[sess_data.pos_in_sess[i]]]:beta[sess.doc_id[sess_data.pos_in_sess[i]]]);
+                //cerr<<i<<endl;
                 sc[i]=s_c[sess.doc_id[sess_data.pos_in_sess[i]]];
+                //cerr<<i<<endl;
                 exam=sess_data.forward[i-1][0]/(sess_data.forward[i-1][0]+sess_data.forward[i-1][1]);
                 if(sess.click_time[sess_data.pos_in_sess[i]]>.1)
                 {
@@ -248,7 +256,7 @@ class mvcm2:public model
                     last_clk[i+1]=last_clk[i];
                 }
             }
-            for(int i=DOCPERPAGE;i;--i)
+            for(int i=DOCPERPAGE+1;i;--i)
                 if(sess.click_time[sess_data.pos_in_sess[i]]>.1)
                 {
                     sess_data.backward[i][1]=0;
@@ -294,11 +302,13 @@ class mvcm2:public model
         {
             if(now==sess_data.ver_pos.size())
             {
-                for(int i=sess_data.ver_pos[now-1]+1;i<=DOCPERPAGE;++i)
+                for(int i=sess_data.ver_pos[now-1]+1;i<=DOCPERPAGE+1;++i)
                 {
                     sess_data.pos_in_sess[i]=i;
                     sess_data.way[i]=0;
                 }
+                //for(int i=1;i<=DOCPERPAGE+1;++i)
+                //    cerr<<"X"<<sess_data.pos_in_sess[i]<<endl;
                 return calc_seq_prob(prob,sess,upd,sess_data);
             }
             if(sess_data.ver_pos[now]-sess_data.ver_pos[now-1]==1)
@@ -382,7 +392,7 @@ class mvcm2:public model
             sess_data.dphi_id.clear();
             sess_data.dsigma.clear();
             sess_data.dsigma_id.clear();
-            for(int i=1;i<=DOCPERPAGE;++i)
+            for(int i=1;i<=DOCPERPAGE+1;++i)
                 if(is_vertical(sess.doc_id[i]))
                 {
                     sess_data.ver_pos.push_back(i);
@@ -392,7 +402,7 @@ class mvcm2:public model
                         sess_data.en[j]=sess_data.ver_pos[sess_data.ver_pos.size()-1];
                     }
                 }
-            for(int j=sess_data.ver_pos[sess_data.ver_pos.size()-1]+1;j<=DOCPERPAGE;++j)
+            for(int j=sess_data.ver_pos[sess_data.ver_pos.size()-1]+1;j<=DOCPERPAGE+1;++j)
             {
                 sess_data.st[j]=sess_data.ver_pos[sess_data.ver_pos.size()-1];
                 sess_data.en[j]=DOCPERPAGE+1;
