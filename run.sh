@@ -1,21 +1,3 @@
-./main -m none -i /home/luocheng/zhengyukun/syq/20170901/part-r-00001 -s ucf -o ../my_data/p-00000 -f true;
-./main -m none -i /home/luocheng/zhengyukun/syq/20170901/part-r-00034 -s ucf -o ../my_data/p-00001 -f true;
-./main -m none -i /home/luocheng/zhengyukun/syq/20170901/part-r-00067 -s ucf -o ../my_data/p-00002 -f true;
-./main -m none -i /home/luocheng/zhengyukun/syq/20170902/part-r-00001 -s ucf -o ../my_data/p-00003 -f true;
-./main -m none -i /home/luocheng/zhengyukun/syq/20170902/part-r-00034 -s ucf -o ../my_data/p-00004 -f true;
-./main -m none -i /home/luocheng/zhengyukun/syq/20170902/part-r-00067 -s ucf -o ../my_data/p-00005 -f true;
-./main -m none -i /home/luocheng/zhengyukun/syq/20170903/part-r-00001 -s ucf -o ../my_data/p-00006 -f true;
-./main -m none -i /home/luocheng/zhengyukun/syq/20170903/part-r-00034 -s ucf -o ../my_data/p-00007 -f true;
-./main -m none -i /home/luocheng/zhengyukun/syq/20170903/part-r-00067 -s ucf -o ../my_data/p-00008 -f true;
-./main -m none -i /home/luocheng/zhengyukun/syq/20170904/part-r-00001 -s ucf -o ../my_data/p-00009 -f true;
-./main -m none -i /home/luocheng/zhengyukun/syq/20170904/part-r-00034 -s ucf -o ../my_data/p-00010 -f true;
-./main -m none -i /home/luocheng/zhengyukun/syq/20170904/part-r-00067 -s ucf -o ../my_data/p-00011 -f true;
-./main -m none -i /home/luocheng/zhengyukun/syq/20170905/part-r-00001 -s ucf -o ../my_data/p-00012 -f true;
-./main -m none -i /home/luocheng/zhengyukun/syq/20170905/part-r-00034 -s ucf -o ../my_data/p-00013 -f true;
-./main -m none -i /home/luocheng/zhengyukun/syq/20170905/part-r-00067 -s ucf -o ../my_data/p-00014 -f true;
-./main -m none -i /home/luocheng/zhengyukun/syq/20170906/part-r-00001 -s ucf -o ../my_data/p-00015 -f true;
-./main -m none -i /home/luocheng/zhengyukun/syq/20170906/part-r-00034 -s ucf -o ../my_data/p-00016 -f true;
-./main -m none -i /home/luocheng/zhengyukun/syq/20170906/part-r-00067 -s ucf -o ../my_data/p-00017 -f true;
-./main -m none -i /home/luocheng/zhengyukun/syq/20170907/part-r-00001 -s ucf -o ../my_data/p-00018 -f true;
-./main -m none -i /home/luocheng/zhengyukun/syq/20170907/part-r-00034 -s ucf -o ../my_data/p-00019 -f true;
-./main -m none -i /home/luocheng/zhengyukun/syq/20170907/part-r-00067 -s ucf -o ../my_data/p-00020 -f true;
+#time ./main -m dbn -l ucf -i ../ucf_small_2005/0.05_10_9999TM_train.ucf,../ucf_small_2005/0.05_10_9999TM_test.ucf,../ucf_small_2005/0.05_10_9999TM_val.ucf -f false -V ../source_data/vrid_type_necessity.txt -t false -r 40 -p 1
+time ./main -m cacm -l ucf -i ../ucf_small_2005/0.001_10_9999TM_train.ucf,../ucf_small_2005/0.001_10_9999TM_test.ucf,../ucf_small_2005/0.001_10_9999TM_val.ucf -f false -V ../source_data/vrid_type_necessity.txt -t false -r 40 -p 1
+#time ./main -m vcm,mcm,ubm,dbn,dcm,cacm,dbn -l ucf -i ../ucf_small_2005/0.05_10_9999TM_train.ucf,../ucf_small_2005/0.05_10_9999TM_test.ucf,../ucf_small_2005/0.05_10_9999TM_val.ucf -f false -V ../source_data/vrid_type_necessity.txt -t false -r 80 -p 1

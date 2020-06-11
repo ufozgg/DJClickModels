@@ -60,6 +60,15 @@
         "vector": "cpp",
         "__functional_03": "cpp",
         "deque": "cpp",
-        "set": "cpp"
-    }
+        "set": "cpp",
+        "queue": "cpp",
+        "random": "cpp",
+        "stack": "cpp",
+        "array": "cpp",
+        "list": "cpp",
+        "regex": "cpp",
+        "unordered_set": "cpp",
+        "valarray": "cpp"
+    },
+    "C_Cpp.errorSquiggles": "Disabled"
 }

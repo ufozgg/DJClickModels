@@ -76,6 +76,30 @@ void data_mining()
 	}
 	cerr<<endl;
 	#endif
+	#ifdef VERTICALPOSCNT
+	int pos_cnt[DOCPERPAGE+2]={},s_cnt=0;
+	for(int i=0;i<=DOCPERPAGE;++i)
+		pos_cnt[i]=0;
+	for(auto &query:querys)
+		if(query.enable)
+		{
+			Vc=V=0;
+			for(int i=query.last;i>0;i=sessions[i].query_nex)
+			{
+				Session &sess=sessions[i];
+				sess.type=0;
+				s_cnt+=1;
+				for(int i=1;i<=DOCPERPAGE;++i)
+					if(docs[sess.doc_id[i]].type>1)
+						++pos_cnt[i];
+			}
+		}
+	for(int i=0;i<=DOCPERPAGE;++i)
+	{
+		cerr<<1.0*pos_cnt[i]/s_cnt<<"\t";
+	}
+	cerr<<endl;
+	#endif
 	#ifdef VERTICALCNT
 	for(auto &query:querys)
 		if(query.enable)
@@ -228,28 +252,52 @@ void data_mining()
 	cout<<"======================================"<<endl;
 	#endif
 	#ifdef FIRSTCLICK
-	vector<int> click_cnt;
-	click_cnt.resize(MINDOCPERPAGE+1);
+	vector<int> ver_click_cnt,nonver_click_cnt;
+	ver_click_cnt.resize(MINDOCPERPAGE+1);
+	nonver_click_cnt.resize(MINDOCPERPAGE+1);
+	int fir_clk,serp_cnt=0,ver_cnt[DOCPERPAGE+2],nonver_cnt[DOCPERPAGE+2];
+	for(int i=0;i<=DOCPERPAGE;++i)
+	{
+		ver_cnt[i]=nonver_cnt[i]=0;
+	}
 	for(auto &query:querys)
 		if(query.enable)
 		{
 			for(int i=query.last;i>0;i=sessions[i].query_nex)
 				if(sessions[i].enable)
 				{
+					serp_cnt+=1;
 					Session &sess=sessions[i];
+					fir_clk=-1;
 					for(int j=1;j<=DOCPERPAGE;++j)
-						if(sess.click_time[j]>.1)
+						if(sess.click_time[j]>.1&&(fir_clk==-1||sess.click_time[j]>sess.click_time[fir_clk]))
 						{
-							++click_cnt[j];
-							break;
+							fir_clk=j;
+							//break;
 						}
+					for(int j=1;j<=DOCPERPAGE;++j)
+						if(docs[sess.doc_id[j]].type>1)
+							ver_cnt[j]+=1;
+						else
+							nonver_cnt[j]+=1;
+					if(docs[sess.doc_id[fir_clk]].type>1)
+						++ver_click_cnt[fir_clk];
+					else
+						++nonver_click_cnt[fir_clk];
 				}
 		}
-	cout<<"FIRST CLICK"<<endl;
-	for(int i=0;i<=DOCPERPAGE;++i)
+	cout<<"NON VERTICAL FIRST CLICK RATE"<<endl;
+	for(int i=1;i<=DOCPERPAGE;++i)
 	{
-		cerr<<click_cnt[i]<<endl;
+		cerr<<nonver_click_cnt[i]*1.0/serp_cnt<<"\t";
 	}
+	cerr<<endl;
+	cout<<"VERTICAL FIRST CLICK RATE"<<endl;
+	for(int i=1;i<=DOCPERPAGE;++i)
+	{
+		cerr<<ver_click_cnt[i]*1.0/serp_cnt<<"\t";
+	}
+	cerr<<endl;
 	cout<<"======================================"<<endl;
 	#endif
 	#ifdef VERTICALBEFOREFIRSTCLICK

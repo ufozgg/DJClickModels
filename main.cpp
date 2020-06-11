@@ -28,6 +28,7 @@ Don't use after 2027A.D.
 #include"mcm_sgd.h"
 #include"mcm_simple.h"
 #include"vcm_layout.h"
+#include"cacm.h"
 #include"load_feature.h"
 #include"load_query_list.h"
 #include"data_mining.h"
@@ -685,6 +686,36 @@ int main(int argc,char* argv[])
 			mcm2_mod.sample();
 		#ifdef DEBUG
 			mcm2_mod.check();
+		#endif
+	}
+	if(find(mods.begin(),mods.end(),"cacm")!=mods.end())
+	{
+		cacm cacm_mod=cacm();
+		if(datas[0]!="none")
+			cacm_mod.train();
+		else
+			cacm_mod.load();
+		
+		if(pa.get<std::string>("sample")=="testdata")
+		{
+			cacm_mod.sample_testdata();//TODO: xxx
+		}
+		else
+		{
+			cacm_mod.test();
+		}
+		if(pa.get<std::string>("typetest")=="true")
+		{
+			cout<<"Type test cacm:\n";
+			for(int i=0;i<=DOCPERPAGE;++i)
+				cout<<cacm_mod.test(false,2,i)<<"\t";
+			cout<<endl;
+		}
+		cacm_mod.dump_rel();
+		if(pa.get<std::string>("sample")=="true")
+			cacm_mod.sample();
+		#ifdef DEBUG
+			cacm_mod.check();
 		#endif
 	}
 	cerr<<"Vertical number:="<<MAXVERTICLE<<endl;

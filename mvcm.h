@@ -34,11 +34,12 @@ class mvcm:public model
         {
             //return alpha[id]+s_c[id];
             //return s_c[id];
-            return alpha[id]*s_c[id];
+            //return alpha[id]*s_c[id];
+            return s_c[id];
         }
         void train_init()
         {
-            name="MVCM_sconly_add";
+            name="MVCM_sc";
             int i,j;
             doc_rel=vector<double>(docs.size()+1);
             alpha=vector<double>(docs.size()+1);

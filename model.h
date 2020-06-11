@@ -165,15 +165,15 @@ class model
         }
         void dump_rel()
         {
-            string file_name="../output/_";
-            file_name+=name+".relevence";
+            /*string file_name="../output/_";
+            file_name+=name+".rel";
             FILE* file=fopen(file_name.data(),"w");
             for(int i=0;i<docs.size();++i)
                 if(docs[i].train_tim&&i<doc_rel.size())
                 {
                     fprintf(file,"%s\t%s\n",docs[i].name.data(),to_string(doc_rel[i]).data());
                 }
-            fclose(file);
+            fclose(file);*/
         }
         void check_model()
         {
@@ -287,12 +287,16 @@ class model
                 for(int i=1;i<=DOCPERPAGE;++i)
                 {
                     //cerr<<click_prob[i]<<"\t";
+                    if(!(click_prob[i]>=1e-9))
+                        click_prob[i]=1e-9;
+                    if(!(click_prob[i]<=1.-1e-9))
+                        click_prob[i]=1.-1e-9;
                     logp=log(click_prob[i]);
                     log_likelihood+=logp;
-                    if(logp>log(0.99999999999))
+                    /*if(logp>log(0.99999999999))
                         logp=log(0.99999999999);
                     if(logp<log(0.00000000001))
-                        logp=log(0.00000000001);// MAGIC OPTION
+                        logp=log(0.00000000001);*/// MAGIC OPTION
                     //log(P(C_1,C_2...C_i)/P(C_1,C_2...C_i-1))
                     //position_perplexity[i]-=log(click_prob[i]/click_prob[i-1]);
                     position_perplexity[i]-=logp;

@@ -188,6 +188,8 @@ class mcm:public model
                     break;*/
                 last_ll=now_ll;
             }
+            for(int i=1;i<doc_rel.size();++i)
+                doc_rel[i]=get_rel(i);
             for(int i=1;i<=MAXVERTICLE;++i)
                 cerr<<beta[i]<<",";
             cerr<<endl;

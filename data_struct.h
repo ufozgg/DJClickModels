@@ -28,8 +28,8 @@ class Session
     public:
         int id,click_cnt,enable,kind;//kind=1(train) kind=2(test) kind=3(vali)
         string ip;
-        double begin_time,click_time[MINDOCPERPAGE+2];
-        int doc_id[MINDOCPERPAGE+2],nex_sess[MINDOCPERPAGE+2],nex_pos[MINDOCPERPAGE+2];
+        double begin_time,click_time[MINDOCPERPAGE+5];
+        int doc_id[MINDOCPERPAGE+5],nex_sess[MINDOCPERPAGE+5],nex_pos[MINDOCPERPAGE+5];
         int user_id,user_nex,query_id,query_nex;
 		int type;
     Session()
@@ -128,7 +128,7 @@ bool qryadd(string qry_w,Session &now)
 }
 void addDoc(string doc_name,Session &now,int pos,int ifclick,double clicktime,int ty=0)
 {
-	doc_name=querys[now.query_id].name+"#"+doc_name;
+	doc_name=querys[now.query_id].name+"#*$#"+doc_name;
 	int w=doc_name2id[doc_name];
 	if(w==0)
 	{
