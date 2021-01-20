@@ -1,6 +1,6 @@
 #####  5% cmp=smooth cmpd=non-smooth
-Test Module CACM
-../rel/CACM.relTest_cnt:        138160
+Test Module CBCM
+../rel/CBCM.relTest_cnt:        138160
 Log likelihood(Log e):  -0.19779864
 Position Perplexity(Base 2):
 1.62669054      1.47105178      1.32104929      1.22251526      1.17617079      1.13569664      1.11129527      1.09370287      1.07875700      1.06791621
@@ -11,8 +11,8 @@ Position Skip Perplexity(Base 2):
 Perplexity:     1.23048456
 
 #####  5% cmp=smooth cmpd=smooth
-Test Module CACM
-../rel/CACM.relTest_cnt:        138160
+Test Module CBCM
+../rel/CBCM.relTest_cnt:        138160
 Log likelihood(Log e):  -0.19834233
 Position Perplexity(Base 2):
 1.63408899      1.49055227      1.32008111      1.22151970      1.17671402      1.13298187      1.10869579      1.09160339      1.07657916      1.06524290
@@ -37,8 +37,8 @@ Perplexity:     1.22601838
 
 
 #####  0.1%  cmpd-smooth=0.01
-Test Module CACM
-../rel/CACM.relTest_cnt:        3467
+Test Module CBCM
+../rel/CBCM.relTest_cnt:        3467
 Log likelihood(Log e):  -0.20820619
 Position Perplexity(Base 2):
 1.66600375      1.47184240      1.37301216      1.21083720      1.19494469      1.11500130      1.13525093      1.13069581      1.07636266      1.06883613

@@ -28,7 +28,7 @@ Don't use after 2027A.D.
 #include"mcm_sgd.h"
 #include"mcm_simple.h"
 #include"vcm_layout.h"
-#include"cacm.h"
+#include"cbcm.h"
 #include"load_feature.h"
 #include"load_query_list.h"
 #include"data_mining.h"
@@ -688,9 +688,9 @@ int main(int argc,char* argv[])
 			mcm2_mod.check();
 		#endif
 	}
-	if(find(mods.begin(),mods.end(),"cacm")!=mods.end())
+	if(find(mods.begin(),mods.end(),"cbcm")!=mods.end())
 	{
-		cacm cacm_mod=cacm();
+		cbcm cacm_mod=cbcm();
 		if(datas[0]!="none")
 			cacm_mod.train();
 		else
@@ -706,7 +706,7 @@ int main(int argc,char* argv[])
 		}
 		if(pa.get<std::string>("typetest")=="true")
 		{
-			cout<<"Type test cacm:\n";
+			cout<<"Type test cbcm:\n";
 			for(int i=0;i<=DOCPERPAGE;++i)
 				cout<<cacm_mod.test(false,2,i)<<"\t";
 			cout<<endl;

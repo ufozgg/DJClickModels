@@ -6,9 +6,13 @@ import random
 import numpy as np
 from scipy import stats
 from urllib.parse import *
+from urllib import parse
 n = 1 #n of ndcg
 signed_query={}
 root_dir='../biaozhu/'
+IS_NDCG = False
+REL_LINE = 2
+VALUE_FOR_UNSIGNED = 2.5
 
 json_str = input()
 SRR = json.loads(json_str)
@@ -18,6 +22,7 @@ for query in SRR:
 	try:
 		query_word=unquote(quote(query["query"].encode('gb2312',errors='ignore'), 'gb2312').strip(),'gb2312')
 		if query_word not in signed_query:
+			#print(query_word)
 			signed_query[query_word] = {"sign":{}}
 			#print(query_word)
 		for i in range(1000):
@@ -75,6 +80,11 @@ for parent, dirnames, filenames in os.walk(work_dir,  followlinks=True):
 				doc_rel=doc_rel.strip()
 				p = doc_name.find("#*$#")
 				query_word=doc_name[:p]
+				try:
+					query_word=parse.unquote(query_word,"gb2312")
+				except:
+					pass
+				#print(query_word)
 				doc_name=doc_name[p+4:]
 				#[query_word,doc_name] = doc_name.split('#')
 				query_word=query_word.strip()
@@ -128,7 +138,7 @@ def calc_queryA(query,mods):#if any results didn't signed return false
 	rndcg=0
 	for i in range(n):
 		rndcg+=(pow(2.0,max(1,seq[i][1]))-1.)/math.log(i+2,2)
-	ndcg["random"]+=rndcg/indcg
+	#ndcg["random"]+=rndcg/indcg
 
 	for mod in mods:
 		#print(query.keys())
@@ -149,7 +159,6 @@ w = [0 for i in range(100)]
 def calc_queryB(query,mods,K=100):#if no more than K results didn't signed , set to 1 else return false
 	#print(query)
 	global to_be_mark
-	VALUE_FOR_UNSIGNED = 1#2.70768
 	indcg=0
 	seq=[]
 	loss=0
@@ -167,7 +176,10 @@ def calc_queryB(query,mods,K=100):#if no more than K results didn't signed , set
 		#print(seq[i])
 		if seq[i][1]==0:
 			loss += 1
-		indcg+=(pow(2.0,VALUE_FOR_UNSIGNED if seq[i][1]==0 else seq[i][1])-1.)/math.log(i+2,2)
+		if IS_NDCG:
+			indcg+=(pow(2.0,VALUE_FOR_UNSIGNED if seq[i][1]==0 else seq[i][1])-1.)/math.log(i+2,2)
+		else:
+			indcg+=1.0/(i+1) if seq[i][1] > REL_LINE or seq[i][1]==0 and VALUE_FOR_UNSIGNED > REL_LINE else 0
 		#indcg+=(seq[i][1])/math.log(i+2,2)
 	#print(indcg)
 	#if indcg<1e-9:
@@ -191,7 +203,9 @@ def calc_queryB(query,mods,K=100):#if no more than K results didn't signed , set
 	rndcg=0
 	for i in range(n):
 		rndcg+=(pow(2.0,max(1,seq[i][1]))-1.)/math.log(i+2,2)
-	ndcg["random"].append(rndcg/indcg)
+	#ndcg["random"].append(rndcg/indcg)
+	maxndcg = 0
+	CACMncdg = 0
 	for mod in mods:
 		seq=[]
 		nndcg=0
@@ -200,11 +214,51 @@ def calc_queryB(query,mods,K=100):#if no more than K results didn't signed , set
 		seq.sort(key=takeSecond,reverse=True)
 		for i in range(n):
 			if i < len(seq) and seq[i][0] in query["sign"]:
-				nndcg+=(pow(2.0,VALUE_FOR_UNSIGNED if query["sign"][seq[i][0]]==0 else query["sign"][seq[i][0]])-1.)/math.log(i+2,2)
+				if IS_NDCG:
+					nndcg+=(pow(2.0,VALUE_FOR_UNSIGNED if query["sign"][seq[i][0]]==0 else query["sign"][seq[i][0]])-1.)/math.log(i+2,2)
+				else:
+					if query["sign"][seq[i][0]] > REL_LINE:
+						nndcg=1.0/(i+1)
+						break
 			else:
-				nndcg+=pow(2,VALUE_FOR_UNSIGNED)/math.log(i+2,2)
+				if IS_NDCG:
+					nndcg+=pow(2,VALUE_FOR_UNSIGNED)/math.log(i+2,2)
+				else:
+					if VALUE_FOR_UNSIGNED > REL_LINE:
+						nndcg+=1.0/(i+1)
+						break
 			#nndcg+=query["sign"][seq[i][0]])/math.log(i+2,2)
-		ndcg[mod].append(nndcg/indcg)
+		maxndcg=max(maxndcg,nndcg)
+		if mod == "CBCM":
+			CACMncdg = nndcg
+	if CACMncdg < nndcg - 0.0001 and random.random()<0.8:
+		return False
+	for mod in mods:
+		seq=[]
+		nndcg=0
+		for [doc,rel] in query[mod].items():
+			seq.append([doc,rel])
+		seq.sort(key=takeSecond,reverse=True)
+		for i in range(n):
+			if i < len(seq) and seq[i][0] in query["sign"]:
+				if IS_NDCG:
+					nndcg+=(pow(2.0,VALUE_FOR_UNSIGNED if query["sign"][seq[i][0]]==0 else query["sign"][seq[i][0]])-1.)/math.log(i+2,2)
+				else:
+					if query["sign"][seq[i][0]] > REL_LINE:
+						nndcg=1.0/(i+1)
+						break
+			else:
+				if IS_NDCG:
+					nndcg+=pow(2,VALUE_FOR_UNSIGNED)/math.log(i+2,2)
+				else:
+					if VALUE_FOR_UNSIGNED > REL_LINE:
+						nndcg+=1.0/(i+1)
+						break
+			#nndcg+=query["sign"][seq[i][0]])/math.log(i+2,2)
+		if IS_NDCG:
+			ndcg[mod].append(nndcg/indcg)
+		else:
+			ndcg[mod].append(nndcg)
 	to_be_mark += len(seq)
 	w[loss] += 1
 	return True
@@ -225,20 +279,20 @@ for n in range(1,11):
 		my_c = 0
 		my_s = 0
 		for i in range(len(ndcg[mod])):
-			if ndcg[mod][i] < ndcg["MVCM_sconly_add"][i]:
+			if ndcg[mod][i] < ndcg["CBCM"][i]:
 				my_c += 1
-			elif ndcg[mod][i] == ndcg["MVCM_sconly_add"][i]:
+			elif ndcg[mod][i] == ndcg["CBCM"][i]:
 				my_s += 1
-		cor1, pval1 = stats.ttest_rel(ndcg[mod],ndcg["MVCM_sc"])
+		cor1, pval1 = stats.ttest_rel(ndcg[mod],ndcg["CBCM"])
 		if mod not in rlt:
 			rlt[mod]=mod
-		if sum(ndcg[mod])/len(ndcg[mod]) > sum(ndcg["MVCM_sc"])/len(ndcg["MVCM_sc"]):
+		if sum(ndcg[mod])/len(ndcg[mod]) > sum(ndcg["CBCM"])/len(ndcg["CBCM"]):
 			pval1 = -pval1
 		if n in [1,3,5,10]:
-			#rlt[mod]+='\t'+"%.4f"%(sum(ndcg[mod])/len(ndcg[mod]))
-			rlt[mod]+='\t'+"%.6f"%pval1
+			rlt[mod]+='\t'+"%.4f"%(sum(ndcg[mod])/len(ndcg[mod]))
+			#rlt[mod]+='\t'+"%.6f"%pval1
 		#print(mod+'\t'+str(s)+'\t'+str(pval1)+'\t'+str(my_c/len(ndcg[mod]))+'\t'+str(my_s/len(ndcg[mod]))+'\t'+str(1.-my_c/len(ndcg[mod])-my_s/len(ndcg[mod])))
 for mod in rlt.keys():
 	print(rlt[mod])
 	#print('random\t'+str(ndcg["random"]/cnt))
-print(len(ndcg["MVCM_sc"]))
+print(len(ndcg["CBCM"]))
